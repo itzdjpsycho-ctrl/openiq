@@ -5,7 +5,7 @@ def eligible(member, day):
     d=member.data
     return day>=d.get('joined','0000') and not any(v['start']<=day<=v['end'] for v in d.get('vacations',[]))
 
-def calculate(g, filters=None, alliance_only=False):
+def calculate(g, filters=None, alliance_only=False, exclude_exceptions=True):
     f=filters or {}; members=rows(g,'member'); lookup={m.key:m for m in members}
     wars=sorted([w for w in rows(g,'war') if (not f.get('type') or w.data['type']==f['type']) and (not f.get('month') or w.data['date'].startswith(f['month'])) and (f.get('capped') in (None,'') or w.data['capped']==(str(f['capped']).lower()=='true')) and (not alliance_only or w.data.get('alliance_included'))],key=lambda w:w.data['date'])
     stats={m.key:{'id':m.key,'name':m.data['name'],'kills':0,'deaths':0,'present':0,'eligible':0,'timeline':[],'calendar':[]} for m in members}
@@ -18,7 +18,7 @@ def calculate(g, filters=None, alliance_only=False):
             if eligible(m,d['date']): st['calendar'].append({'date':d['date'],'present':bool(row),'war':w.key})
             if row and not d.get('excluded') and not row.get('excluded'):
                 st['kills']+=row['kills']; st['deaths']+=row['deaths']; st['timeline'].append({'date':d['date'],'kills':row['kills'],'deaths':row['deaths'],'kdr':kdr(row['kills'],row['deaths'])})
-                if not m.data.get('exception'):
+                if not exclude_exceptions or not m.data.get('exception'):
                     wk+=row['kills']; wd+=row['deaths']; cl=classes[row.get('class','Unknown')]; cl['kills']+=row['kills']; cl['deaths']+=row['deaths']; cl['participants']+=1
         totals['kills']+=wk; totals['deaths']+=wd; timeline.append({'date':d['date'],'kills':wk,'deaths':wd,'kdr':kdr(wk,wd),'war':w.key})
     for m in members:

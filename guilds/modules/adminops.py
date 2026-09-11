@@ -1,4 +1,5 @@
-import secrets
+import secrets,hashlib
+from datetime import timedelta
 from django.contrib.auth.models import User
 from guilds.models import Guild, Access, Record
 from .core import *
@@ -18,11 +19,16 @@ def handle(g,action,p,role,user):
         if target==user and tier!='owner' and Access.objects.filter(guild=g,role='owner').count()==1: raise Invalid('Assign another owner before demoting yourself')
         Access.objects.update_or_create(guild=g,user=target,defaults={'role':tier}); return {'username':target.username,'role':tier}
     if action=='adoption_key':
-        token=secrets.token_urlsafe(24); save(g,'adoption',{'token':token,'used':False},'current'); return {'key':token}
+        token=secrets.token_urlsafe(24); save(g,'adoption',{'token_hash':hashlib.sha256(token.encode()).hexdigest(),'used':False,'expires':(datetime.now(timezone.utc)+timedelta(days=1)).isoformat()},'current'); return {'key':token}
     if action=='adopt':
         r=get(g,'adoption','current')
-        if r.data['used'] or not secrets.compare_digest(r.data['token'],str(p['key'])): raise Invalid('Invalid adoption key')
+        if r.data['used'] or r.data.get('expires','')<now() or not secrets.compare_digest(r.data.get('token_hash',''),hashlib.sha256(str(p['key']).encode()).hexdigest()): raise Invalid('Invalid adoption key')
         g.server_id=text(p['server_id']); g.save(); r.data['used']=True; r.save(); return {'server_id':g.server_id}
+    if action=='disband':
+        if p.get('confirmation')!=g.name: raise Invalid('Type the guild name to confirm')
+        from .alliances import visible
+        for alliance in visible(g): alliance.data['status']='disbanded'; alliance.save()
+        guild_id=g.pk; g.delete(); return {'deleted_guild':guild_id}
     if action=='purge':
         if p.get('confirmation')!=g.name: raise Invalid('Type the guild name to confirm')
         count,_=Record.objects.filter(guild=g,kind__in=['war','import','session','assignment']).delete(); return {'deleted':count}

@@ -35,7 +35,7 @@ class Command(BaseCommand):
                     if not tier:
                         Access.objects.filter(guild=g,user=user).delete();raise ValueError('Your Discord roles do not grant access.')
                     Access.objects.update_or_create(guild=g,user=user,defaults={'role':tier})
-                    channel=g.config.get('channels',{}).get('gear' if command.startswith('gear') else 'bot')
+                    channel=g.config.get('channels',{}).get('gear' if command in ['gear','gearupdate','gearlist','gearping','deletegear'] else 'bot')
                     if channel and str(channel)!=str(interaction.channel_id):raise ValueError('Use the configured command channel.')
                     return execute(user,g.pk,'commands','run',{'command':command,'arguments':json.loads(arguments)})
                 try:result=await run();content=json.dumps(result,indent=2,ensure_ascii=False)
@@ -45,7 +45,7 @@ class Command(BaseCommand):
         @bot.event
         async def on_interaction(interaction):
             custom_id=(interaction.data or {}).get('custom_id','')
-            if not custom_id.startswith('signup:'):return
+            if not custom_id.startswith(('signup:','welcome:')):return
             await interaction.response.defer(ephemeral=True)
             @sync_to_async
             def apply_component():
@@ -56,15 +56,15 @@ class Command(BaseCommand):
                 tier=role_for(g,{'owner':interaction.guild.owner_id==interaction.user.id,'permissions':str(interaction.user.guild_permissions.value)},[r.id for r in interaction.user.roles])
                 if not tier:Access.objects.filter(guild=g,user=user).delete();raise ValueError('No guild access')
                 Access.objects.update_or_create(guild=g,user=user,defaults={'role':tier})
-                process(user,custom_id)
-            try:await apply_component();text='Signup updated.'
+                process(user,custom_id,deliver_roles=True)
+            try:await apply_component();text='Welcome role updated.' if custom_id.startswith('welcome:') else 'Signup updated.'
             except Exception as exc:text=str(exc)
             await interaction.followup.send(text[:1900],ephemeral=True,allowed_mentions=discord.AllowedMentions.none())
         for name in COMMANDS:
             pieces=name.split(' ',1)
             if len(pieces)==2:
                 if pieces[0] not in groups:
-                    groups[pieces[0]]=app_commands.Group(name=pieces[0],description='Guild Observatory '+pieces[0]);bot.tree.add_command(groups[pieces[0]])
+                    groups[pieces[0]]=app_commands.Group(name=pieces[0],description='OpenIQ '+pieces[0]);bot.tree.add_command(groups[pieces[0]])
                 groups[pieces[0]].add_command(app_commands.Command(name=pieces[1],description='Run '+name,callback=make_callback(name)))
             else:bot.tree.add_command(app_commands.Command(name=name,description='Run '+name,callback=make_callback(name)))
         if options['check']:

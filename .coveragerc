@@ -1,0 +1,15 @@
+[run]
+core = ctrace
+branch = True
+source = guilds,config
+omit =
+    guilds/tests.py
+    guilds/test_*.py
+    guilds/migrations/*
+
+[report]
+fail_under = 100
+show_missing = True
+
+[html]
+directory = htmlcov

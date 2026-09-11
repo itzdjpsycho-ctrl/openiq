@@ -36,8 +36,15 @@ def handle(g,action,p,role,user):
     if action=='save':
         key=p.get('id'); old=get(g,'war',key).data if key else {}
         data={**old,**{k:v for k,v in p.items() if k in ['note','excluded','alliance_included','session']}}
-        data.update(date=date(p.get('date',old.get('date',now()[:10]))),type=choice(p.get('type',old.get('type','Node')),['Node','Siege'],'war type'),result=choice(p.get('result',old.get('result','Draw')),['Win','Loss','Draw'],'result'),capped=bool(p.get('capped',old.get('capped',False))),participants=participants(g,p.get('participants',old.get('participants'))))
+        context={field:text(p.get(field,old.get(field,'')),label,200) if p.get(field,old.get(field,'')) else '' for field,label in [('location','node / castle'),('opponents','opposing guilds'),('cap','cap details')]}
+        data.update(date=date(p.get('date',old.get('date',now()[:10]))),type=choice(p.get('type',old.get('type','Node')),['Node','Siege'],'war type'),result=choice(p.get('result',old.get('result','Draw')),['Win','Loss','Draw'],'result'),capped=bool(p.get('capped',old.get('capped',False))),participants=participants(g,p.get('participants',old.get('participants'))),**context)
         return public(save(g,'war',data,key))
     if action=='delete':
-        get(g,'war',p['war']).delete(); return {'deleted':p['war']}
+        war=get(g,'war',p['war'])
+        for kind in ['event','session']:
+            for record in rows(g,kind):
+                if record.data.get('war')==war.key:record.data.pop('war');record.save()
+        for draft in rows(g,'import'):
+            if draft.data.get('war')==war.key:draft.data.update(status='war_deleted',deleted_war=war.key);draft.data.pop('war');draft.save()
+        war.delete(); return {'deleted':p['war']}
     raise Invalid('Unknown war action')

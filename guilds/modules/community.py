@@ -1,4 +1,4 @@
-import random
+import random,json
 from .core import *
 from guilds.models import Outbox
 from .analytics import calculate
@@ -19,8 +19,15 @@ def handle(g,action,p,role,user):
     if action=='reply':
         r=get(g,'ticket',p['ticket'])
         if role=='member' and r.data['user']!=user.pk: raise PermissionDenied()
+        if r.data['status']!='open':raise Invalid('This ticket is closed')
         r.data['replies'].append({'by':user.username,'text':text(p['text'],maximum=5000),'at':now()}); r.save(); return public(r)
-    if action=='apply': return public(save(g,'application',{'user':user.pk,'family':text(p['family']),'answers':text(p['answers'],maximum=5000),'status':'pending'}))
+    if action=='apply':
+        data={'user':user.pk,'family':text(p['family']),'answers':text(p['answers'],maximum=5000),'status':'pending'}
+        if p.get('form'):
+            form=get(g,'recruitment_form',p['form']);answers=p.get('responses')
+            if not isinstance(answers,list) or len(answers)!=len(form.data['questions']):raise Invalid('Answer every application question')
+            data.update(form=form.key,questions=form.data['questions'],responses=[text(answer,'answer',5000) for answer in answers])
+        return public(save(g,'application',data))
     if action=='roll':
         result={'user':user.username,'roll':random.SystemRandom().randint(1,100),'at':now()}; save(g,'roll',result); return result
     if action=='tap':
@@ -32,11 +39,21 @@ def handle(g,action,p,role,user):
     if action=='roast':
         m=owner_or_self(g,role,user,p['member']); s=next(x for x in calculate(g)['members'] if x['id']==m.key); return {'text':f"{m.data['name']} has {s['deaths']} deaths. At least the respawn button knows a loyal customer.",'mode':'local template'}
     require(role)
+    if action=='ticket_preview':
+        from guilds.discord_tickets import plan
+        return {'text':json.dumps(plan(g,get(g,'ticket',p['ticket'])),indent=2)}
     if action=='review_application':
         a=get(g,'application',p['application']); a.data.update(status=choice(p['status'],['accepted','rejected'],'status'),review=text(p['review'],maximum=3000),reviewer=user.username); a.save(); return public(a)
     if action=='close_ticket':
         t=get(g,'ticket',p['ticket']); t.data['status']='closed'; t.save(); return public(t)
-    if action=='welcome': return preview(g,ident(),f"Welcome {text(p['name'])}! {p.get('message','Choose a role and introduce yourself.')}")
+    if action=='welcome':
+        member=get(g,'member',p['member']) if p.get('member') else None
+        name=member.data['name'] if member else text(p['name'])
+        result=preview(g,'welcome:'+member.key if member else ident(),f"Welcome {name}! {p.get('message','Choose a role and introduce yourself.')}",g.config.get('channels',{}).get('welcome','preview'))
+        if member:
+            from guilds.discord_welcome import components
+            save(g,'message_components',{'components':components(g,member)},str(result['id']))
+        return result
     if action=='weekly':
         from datetime import timedelta
         cutoff=(datetime.now(timezone.utc)-timedelta(days=7)).date().isoformat(); wars=[w for w in rows(g,'war') if cutoff<=w.data['date']<=now()[:10]]

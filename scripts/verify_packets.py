@@ -15,7 +15,7 @@ def record(kill=True):
     raw[c.kill_nibble//2]=1 if kill else 0
     return bytes(raw)
 def packet(data,seq,port=55000):
-    p=Ether()/IP(src='203.0.113.5',dst='192.0.2.10')/TCP(sport=8888,dport=port,seq=seq,flags='PA')/Raw(data);p.time=1789117200;return p
+    p=Ether(src='02:00:00:00:00:01',dst='02:00:00:00:00:02')/IP(src='203.0.113.5',dst='192.0.2.10')/TCP(sport=8888,dport=port,seq=seq,flags='PA')/Raw(data);p.time=1789117200;return p
 raw=record();packets=[packet(raw[:100],1000),packet(raw[200:],1200),packet(raw[100:200],1100),packet(raw,1000),packet(record(False),5000,55001)]
 with tempfile.TemporaryDirectory() as tmp:
     path=Path(tmp)/'synthetic.pcap';wrpcap(str(path),packets);d=StreamDecoder(c);events=[]

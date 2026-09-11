@@ -15,11 +15,11 @@ from guilds.capture import JsonLineTail
 
 class App:
     def __init__(self,root):
-        self.root=root;root.title('Observatory Capture · file adapter');root.geometry('560x440');self.fields={};self.stop=threading.Event();self.events=queue.Queue()
+        self.root=root;root.title('OpenIQ Capture · file adapter');root.geometry('560x440');self.fields={};self.stop=threading.Event();self.events=queue.Queue()
         ttk.Label(root,text='Local combat-event capture',font=('',18)).pack(pady=15)
         ttk.Label(root,text='Prototype file adapter — does not decode BDO packets.').pack()
         form=ttk.Frame(root);form.pack(fill='x',padx=25,pady=15)
-        for name,value in [('Server','http://127.0.0.1:8000'),('Username','demo'),('Password',''),('Guild ID','1'),('Title','Local capture')]:
+        for name,value in [('Server','http://127.0.0.1:8765'),('Username','demo'),('Password',''),('Guild ID','1'),('Title','Local capture')]:
             row=ttk.Frame(form);row.pack(fill='x',pady=3);ttk.Label(row,text=name,width=12).pack(side='left');entry=ttk.Entry(row,show='*' if name=='Password' else '');entry.insert(0,value);entry.pack(side='right',fill='x',expand=True);self.fields[name]=entry
         ttk.Button(root,text='Open event file and start',command=self.start).pack(pady=5);ttk.Button(root,text='Save & Stop',command=self.stop.set).pack(pady=5)
         self.status=ttk.Label(root,text='Ready');self.status.pack(pady=10);root.after(200,self.poll)

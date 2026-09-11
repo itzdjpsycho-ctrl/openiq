@@ -13,9 +13,9 @@ ACTIONS=[
  a('roster','merge','Merge renamed member',[f('source','Old member','member'),f('target','Keep member','member')]),
  a('roster','remove','Mark inactive',[MEM]),
  a('wars','review','Review scores',[f('csv','Scores (CSV: name,kills,deaths)','textarea',default='name,kills,deaths\n')]),
- a('wars','save','Record war',[f('date','War date','date'),f('type','Type','select',['Node','Siege']),f('result','Result','select',['Win','Loss','Draw']),f('capped','Capped','checkbox'),f('participants','Participants','participants'),f('note','Note','textarea')]),
+ a('wars','save','Record war',[f('date','War date','date'),f('type','Type','select',['Node','Siege']),f('result','Result','select',['Win','Loss','Draw']),f('location','Node / castle'),f('opponents','Opposing guilds'),f('capped','Capped','checkbox'),f('cap','Cap details'),f('participants','Participants','participants'),f('note','Note','textarea')]),
  a('wars','delete','Delete war',[WAR]),
- a('events','save','Create event',[f('title','Title'),f('type','Type','select',['Node','Siege','Practice','Custom']),f('at','Start','datetime-local'),f('timezone','Timezone',default='Pacific/Auckland'),f('teams','Teams (name,capacity per line)','teams',default='Frontline,20\nFlex,10\nBackline,20'),f('recurrence_days','Repeat every N days (0 = once)','number',default=0)]),
+ a('events','save','Create event',[f('title','Title'),f('type','Type','select',['Node','Siege','Practice','Custom']),f('at','Start','datetime-local'),f('timezone','Timezone',default='Pacific/Auckland'),f('teams','Teams (name,capacity,optional group per line)','teams',default='Frontline,20\nFlex,10\nBackline,20'),f('recurrence_days','Repeat every N days (0 = once)','number',default=0),f('image','Card image URL (optional)','url'),f('accent','Accent color (optional)',default='')]),
  a('events','signup','Sign up / move team',[EVENT,MEM,f('team','Team name (empty to withdraw)')],'member'),
  a('events','template','Save event preset',[EVENT,f('name','Preset name')]),
  a('events','from_template','Use event preset',[f('template','Preset','template'),f('at','Start','datetime-local')]),
@@ -39,11 +39,12 @@ ACTIONS=[
  a('community','ticket','Open ticket',[f('category','Category',default='General'),f('subject','Subject'),f('text','Message','textarea')],'member'),
  a('community','reply','Reply to ticket',[f('ticket','Ticket','ticket'),f('text','Reply','textarea')],'member'),
  a('community','close_ticket','Close ticket',[f('ticket','Ticket','ticket')]),
+ a('community','ticket_preview','Preview Discord ticket channel',[f('ticket','Ticket','ticket')]),
  a('community','apply','Submit application',[f('family','Family name'),f('answers','Tell us about your class, gear and availability','textarea')],'member'),
  a('community','review_application','Review application',[f('application','Application','application'),f('status','Decision','select',['accepted','rejected']),f('review','Review notes','textarea')]),
  a('community','roll','Roll 1–100',[],'member'),a('community','tap','Try enhancement',[],'member'),
  a('community','summary_text','Summarize discussion',[f('text','Discussion','textarea')],'member'),a('community','roast','Friendly roast',[MEM],'member'),
- a('community','welcome','Preview welcome',[f('name','New member'),f('message','Welcome message','textarea')]),
+ a('community','welcome','Preview welcome',[MEM,f('message','Welcome message','textarea')]),
  a('community','weekly','Preview weekly summary',[]),a('community','post_event','Preview event card',[EVENT]),a('community','ping_missing','Preview missing responses',[EVENT]),a('community','run_due','Process due reminders / milestones',[]),
  a('integrations','twitch_link','Link Twitch',[MEM,f('handle','Twitch handle (empty to unlink)')],'member'),
  a('integrations','roster_preview','Read roster HTML',[f('html','Official guild page HTML','textarea')]),
@@ -57,7 +58,7 @@ ACTIONS += [
  a('operations','tick','Run scheduled jobs',[]),a('operations','catchup','Catch up scheduled jobs',[f('days','Lookback days','number',default=14)]),
  a('operations','recruitment_form','Create application form',[f('title','Form title'),f('questions','Questions, one per line','lines'),f('channel','Channel',default='preview')],'owner'),
  a('operations','ticket_category','Create ticket category',[f('name','Category'),f('staff_role','Staff role')],'owner'),
- a('operations','welcome_role','Assign welcome role',[MEM,f('role','Role',default='Raider')]),
+ a('operations','welcome_role','Choose welcome role',[MEM,f('role','Role',default='Raider')],'member'),
  a('operations','challenge','Challenge roll',[f('opponent','Opponent','member')]),
  a('intelligence','character','Identify enemy character',[f('character','Character'),f('family','Family name'),f('class','Class'),f('guild','Enemy guild')]),
  a('intelligence','lookup_backoff','Simulate lookup rate limit',[f('until','Resume at','datetime-local')]),
@@ -84,3 +85,11 @@ ACTIONS += [
  a('intelligence','queue_lookup','Queue class lookup',[f('character','Character name')]),
  a('intelligence','resolve_queue','Process class lookups',[]),
 ]
+
+ACTIONS += [a('admin','disband','Disband guild permanently',[f('confirmation','Type the guild name to confirm')],'owner')]
+
+ACTIONS += [a('operations','accept_challenge','Accept roll challenge',[f('challenge','Challenge','challenge')],'member')]
+for action in ACTIONS:
+    if action['module']=='operations' and action['action']=='challenge':action['role']='member'
+
+ACTIONS += [a('coaching','notify','Preview lead notification',[f('assignment','Assignment','assignment')])]

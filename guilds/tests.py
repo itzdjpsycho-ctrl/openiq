@@ -1,6 +1,6 @@
 import json
 from datetime import datetime,timedelta,timezone
-from django.test import TestCase,Client
+from django.test import TestCase,Client,override_settings
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from guilds.models import Guild,Access,Record,Outbox
@@ -26,6 +26,10 @@ class DomainTests(TestCase):
     def test_cross_guild_references_rejected(self):
         other=Guild.objects.create(name='Other');Record.objects.create(guild=other,kind='member',key='foreign',data={'name':'Other'})
         with self.assertRaises(Invalid):self.war(participants=[{'member':'foreign','kills':2,'deaths':1}])
+    def test_war_context_survives_partial_edits(self):
+        war=self.war(location='Calpheon Castle',opponents='Iron Vow, Moonfall',capped=True,cap='Tier 2 · 550 GS')
+        edited=self.run_action('wars','save',{'id':war['id'],'note':'Reviewed','participants':war['participants']})
+        self.assertEqual((edited['location'],edited['opponents'],edited['cap']),('Calpheon Castle','Iron Vow, Moonfall','Tier 2 · 550 GS'))
     def test_import_review_and_idempotence(self):
         d=self.run_action('wars','review',{'csv':'name,kills,deaths\nAlpha,10,2\nBeto,8,1'})
         self.assertEqual(d['rows'][0]['member'],self.m);self.assertEqual(d['rows'][1]['member'],'')
@@ -148,6 +152,7 @@ class DomainTests(TestCase):
             with p.open('a') as f:f.write('}\n')
             self.assertEqual(tail.read(),[{'id':'a'}]);self.assertEqual(tail.read(),[])
             p.write_text('{}\n');self.assertEqual(len(tail.read()),1)
+    @override_settings(ALLOW_LOCAL_LOGIN=True)
     def test_onboard_is_private(self):
         self.client.force_login(self.member)
         response=self.client.post('/onboard/',data=json.dumps({'name':'New guild','names':['Fresh']}),content_type='application/json')
@@ -207,3 +212,49 @@ class DomainTests(TestCase):
         self.run_action('intelligence','lookup_backoff',{'until':'2099-01-01T00:00:00Z'})
         self.assertEqual(self.run_action('intelligence','resolve_queue',{})['resolved'],0)
         self.assertEqual(get(self.g,'lookup','enemy').data['status'],'pending')
+    def test_adoption_key_hidden_and_one_use(self):
+        key=self.run_action('admin','adoption_key',{})['key']
+        outsider=User.objects.create_user('newowner',password='testing-123')
+        self.client.force_login(outsider)
+        payload=json.dumps({'guild':self.g.pk,'server_id':'1234','key':key})
+        response=self.client.post('/recover/',data=payload,content_type='application/json')
+        self.assertEqual(response.status_code,200)
+        self.assertEqual(self.client.post('/recover/',data=payload,content_type='application/json').status_code,400)
+        data=self.client.get(f'/api/{self.g.pk}/state/').json();self.assertNotIn('adoption',data['records'])
+    def test_disband_requires_confirmation_and_deletes_guild(self):
+        with self.assertRaises(Invalid):self.run_action('admin','disband',{'confirmation':'wrong'})
+        result=self.run_action('admin','disband',{'confirmation':'Guild'})
+        self.assertEqual(result['deleted_guild'],self.g.pk);self.assertFalse(Guild.objects.filter(pk=self.g.pk).exists())
+    def test_allied_event_view_rejects_outsiders(self):
+        e=self.event();shared=self.run_action('events','share',{'event':e['id']})
+        outsider=User.objects.create_user('outsider',password='testing-123');self.client.force_login(outsider)
+        self.assertEqual(self.client.get('/events/shared/'+shared['share_token']+'/').status_code,403)
+        self.client.force_login(self.owner);self.assertEqual(self.client.get('/events/shared/'+shared['share_token']+'/').status_code,200)
+    def test_challenge_requires_opponent_acceptance(self):
+        c=self.run_action('operations','challenge',{'opponent':self.m})
+        with self.assertRaises(PermissionDenied):self.run_action('operations','accept_challenge',{'challenge':c['id']})
+        result=self.run_action('operations','accept_challenge',{'challenge':c['id']},self.member)
+        self.assertEqual(result['status'],'complete')
+        with self.assertRaises(Invalid):self.run_action('operations','accept_challenge',{'challenge':c['id']},self.member)
+    def test_capture_update_digest_and_atomic_install(self):
+        import tempfile,zipfile,hashlib
+        from pathlib import Path
+        from guilds.updater import install_release,inspect_release
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);archive=root/'capture.zip'
+            with zipfile.ZipFile(archive,'w') as z:z.writestr('capture.py','print("OpenIQ")')
+            manifest=root/'manifest.json';data={'version':'0.1.0','archive':'capture.zip','sha256':'bad'};manifest.write_text(json.dumps(data))
+            with self.assertRaises(ValueError):install_release(manifest,root/'installed')
+            data['sha256']=hashlib.sha256(archive.read_bytes()).hexdigest();manifest.write_text(json.dumps(data))
+            self.assertEqual(install_release(manifest,root/'installed')['installed'],'0.1.0')
+            self.assertFalse(inspect_release(manifest,root/'installed')['available'])
+    def test_capture_update_rejects_traversal(self):
+        import tempfile,zipfile,hashlib
+        from pathlib import Path
+        from guilds.updater import install_release
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);archive=root/'capture.zip'
+            with zipfile.ZipFile(archive,'w') as z:z.writestr('../outside.py','bad')
+            manifest=root/'manifest.json';manifest.write_text(json.dumps({'version':'0.1.0','archive':'capture.zip','sha256':hashlib.sha256(archive.read_bytes()).hexdigest()}))
+            with self.assertRaises(ValueError):install_release(manifest,root/'installed')
+            self.assertFalse((root/'outside.py').exists())

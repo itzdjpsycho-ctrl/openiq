@@ -27,7 +27,10 @@ def handle(g,action,p,role,user):
         if end<start: raise Invalid('Vacation ends before it starts')
         m.data.setdefault('vacations',[]).append({'start':start,'end':end}); m.save(); return public(m)
     if action=='note':
-        m=get(g,'member',p['member']); m.data.setdefault('notes',[]).append({'text':text(p['text'],maximum=4000),'at':now(),'by':user.username}); m.save(); return public(m)
+        m=get(g,'member',p['member']); notes=m.data.setdefault('notes',[]); note={'text':text(p['text'],maximum=4000),'at':now(),'by':user.username}
+        if 'index' in p: notes[integer(p['index'],'note index',0,len(notes)-1)]=note
+        else: notes.append(note)
+        m.save(); return public(m)
     if action=='group': return public(save(g,'group',{'name':text(p['name']),'color':p.get('color','#63d9c5')},p.get('id')))
     if action=='sync':
         names=p.get('names',[])

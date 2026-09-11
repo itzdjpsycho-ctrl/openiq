@@ -39,6 +39,10 @@ def flags(g):
 
 def handle(g,action,p,role,user):
     require(role)
+    if action=='notify':
+        from .community import preview
+        assignment=get(g,'assignment',p['assignment']);lead=get(g,'lead',assignment.data['lead']);member=get(g,'member',assignment.data['member'])
+        return preview(g,'lead:'+assignment.key,f"{lead.data['name']}: mentor {member.data['name']}.",g.config.get('channels',{}).get('leads','preview'))
     if action=='settings':
         require(role,'owner')
         config={'enabled':bool(p.get('enabled',True))}
