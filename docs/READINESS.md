@@ -141,18 +141,23 @@ verification and the choice of a public host remain external launch checks.
   capture, scheduler, backup, and delivery status with actionable diagnostics.
 - [ ] **UX-03 — Empty/error/loading states (reserved for UX contributor).** Make every dashboard section usable
   with no demo data and preserve entered values after validation failures.
-  Shared tables now explain empty results. Shared action forms show saving state,
-  prevent duplicate submission/dismissal while pending, retain values on failure,
-  and focus the error for correction. Section-specific states remain outstanding.
+  - [x] **UX-03a: Shared table and form feedback.** Explain empty tables, show
+    saving state, prevent duplicate submission/dismissal while pending, retain
+    entered values on failure, and focus the error for correction.
+  - [ ] **UX-03b: Section-specific states.** Verify every dashboard section with
+    no demo data and complete its empty, error, and loading states.
 - [ ] **UX-04 — Accessibility and mobile pass (reserved for UX contributor).** Verify keyboard operation, focus,
   labels, contrast, reduced motion, narrow layouts, and screen-reader announcements
   for dynamic workflows.
-  First pass adds named guild/action selectors and dialogs, current-section
-  semantics, keyboard focus retention in navigation, visible focus outlines,
-  reduced-motion styles, and narrow-screen toast sizing. An opt-in Edge test
-  (`OPENIQ_BROWSER_TEST=1 python manage.py test guilds.test_ux_browser`) verifies
-  empty history at 390px, keyboard navigation, and failed-save correction.
-  Full section-by-section accessibility and mobile verification remains open.
+  - [x] **UX-04a: Shared accessibility and mobile improvements.** Name guild/action
+    selectors and dialogs, expose the current section, retain navigation focus,
+    add visible focus outlines and reduced-motion styles, and constrain mobile
+    toast sizing. Verify empty history at 390px, keyboard navigation, and
+    failed-save correction with the opt-in Edge browser regression test:
+    `OPENIQ_BROWSER_TEST=1 python manage.py test guilds.test_ux_browser`.
+  - [ ] **UX-04b: Full accessibility and mobile verification.** Complete the
+    section-by-section keyboard, labels, contrast, narrow-layout, and
+    screen-reader checks for dynamic workflows.
 - [ ] **UX-05 — Guild-cluster boundaries (reserved for UX contributor).** Test two BDO guilds on one Discord
   server and allied guilds in separate servers without data or permission leakage.
 - [ ] **DOC-01 — Production runbook.** Document Discord application creation, OAuth
