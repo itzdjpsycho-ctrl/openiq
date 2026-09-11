@@ -41,6 +41,16 @@ with sync_playwright() as p:
         assert page.locator('[data-detail-kills]').input_value()=='24'
         page.get_by_label('Sort players',exact=True).select_option('name')
         page.get_by_role('button',name='Close',exact=True).click()
+        page.get_by_role('button',name='Review scores',exact=True).click()
+        page.get_by_label('Scores (CSV: name,kills,deaths)',exact=True).fill('name,kills,deaths\nTestGamma,8,2\nNoRosterMatch,3,1')
+        page.get_by_role('button',name='Save',exact=True).click();page.wait_for_function('!document.querySelector("#dialog").open')
+        page.get_by_role('button',name='Finalize score review',exact=True).click()
+        unmatched=page.get_by_label('Match extracted name NoRosterMatch',exact=True)
+        assert unmatched.input_value()=='' and unmatched.get_attribute('required') is not None
+        unmatched.select_option(label='TestBeta')
+        page.get_by_role('button',name='Save',exact=True).click();page.wait_for_function('!document.querySelector("#dialog").open || document.querySelector("#form-error").textContent')
+        assert not page.locator('#dialog').is_visible(),page.locator('#form-error').inner_text()
+        assert page.evaluate("state.records.war.length===2 && state.records.import[0].status==='finalized'")
         page.locator('nav').get_by_role('button',name='Analytics',exact=True).click()
         assert page.get_by_role('img',name='K/D across recorded wars',exact=True).count()==1
         assert page.locator('#class-bubbles [data-bubble]').count()>0
@@ -93,7 +103,7 @@ with sync_playwright() as p:
         parsed=page.evaluate("async()=>await parseIkusaText('[23:59:58] Alpha has killed Enemy from Rival\\n[00:00:02] Alpha died to Enemy from Rival','2026-09-11','+12:00')")
         assert len(parsed)==2 and parsed[1]['player']=='Enemy'
         assert not errors,errors
-        print('Browser passed: OpenIQ branding, 12 tabs, mobile layout, member search/create, war entry/inline edit, analytics overlays, event creation, gear update, scoped live replay/debrief, stream filtering/player, settings preservation, ticket/welcome/access role configuration, browser IKUSA parsing, no JavaScript errors.')
+        print('Browser passed: OpenIQ branding, 12 tabs, mobile layout, member search/create, war entry/inline edit, reviewed score finalization, analytics overlays, event creation, gear update, scoped live replay/debrief, stream filtering/player, settings preservation, ticket/welcome/access role configuration, browser IKUSA parsing, no JavaScript errors.')
     except Exception:
         print('FORM ERROR:',page.locator('#form-error').inner_text())
         print('INVALID:',page.evaluate('Array.from(document.querySelectorAll("#action-form :invalid")).map(e=>({tag:e.tagName,type:e.type,value:e.value,message:e.validationMessage}))'))
