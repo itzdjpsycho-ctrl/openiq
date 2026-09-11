@@ -64,3 +64,7 @@ The installed Django release supports the host's Python 3.14; see [Django 5.2 re
 ## Later packet-format finding
 
 A deeper search located [sch-28/ikusa_logger](https://github.com/sch-28/ikusa_logger), including its public field-calibration format. The checked-in calibration reports patch **2023-04-19**. OpenIQ now has an independently written configurable decoder with per-flow TCP assembly, offline PCAP and explicit-interface capture adapters. Tests generate packets using the historical field locations. This establishes prototype decoding behavior, not compatibility with the current BDO patch. Public field offsets and the text-log contract were used as facts; no upstream source implementation is distributed in this repository.
+
+### Private ticket channel adapter
+
+OpenIQ independently builds private-channel permission overwrites, transcript updates, and read-only closure using the [official Discord guild-channel API](https://docs.discord.com/developers/resources/guild#create-guild-channel). The adapter is opt-in and tested with mocked responses; no live server writes have been performed.

@@ -1,4 +1,4 @@
-import random
+import random,json
 from .core import *
 from guilds.models import Outbox
 from .analytics import calculate
@@ -39,6 +39,9 @@ def handle(g,action,p,role,user):
     if action=='roast':
         m=owner_or_self(g,role,user,p['member']); s=next(x for x in calculate(g)['members'] if x['id']==m.key); return {'text':f"{m.data['name']} has {s['deaths']} deaths. At least the respawn button knows a loyal customer.",'mode':'local template'}
     require(role)
+    if action=='ticket_preview':
+        from guilds.discord_tickets import plan
+        return {'text':json.dumps(plan(g,get(g,'ticket',p['ticket'])),indent=2)}
     if action=='review_application':
         a=get(g,'application',p['application']); a.data.update(status=choice(p['status'],['accepted','rejected'],'status'),review=text(p['review'],maximum=3000),reviewer=user.username); a.save(); return public(a)
     if action=='close_ticket':

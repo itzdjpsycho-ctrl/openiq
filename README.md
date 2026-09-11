@@ -161,7 +161,7 @@ Optional AI text generation uses a local Ollama server when `OLLAMA_MODEL` is se
 
 ## Test coverage
 
-The Python application and management commands currently have **100% statement and branch coverage** across **112 tests**. Coverage excludes test files and generated migrations. The C tracer is selected explicitly because Python 3.14's default monitoring tracer reported false missing branches for compact exception paths.
+The Python application and management commands currently have **100% statement and branch coverage** across **116 tests**. Coverage excludes test files and generated migrations. The C tracer is selected explicitly because Python 3.14's default monitoring tracer reported false missing branches for compact exception paths.
 
 ```bash
 python -m pip install -r requirements-dev.txt
@@ -179,3 +179,14 @@ To build and inspect a portable capture source release locally:
 python manage.py release_capture --release-version 0.1.0 --output /tmp/openiq-release
 python manage.py update_capture /tmp/openiq-release/manifest.json /tmp/openiq-capture --install
 ```
+
+
+## Discord ticket channels (optional)
+
+The Community tab can preview a private ticket-channel plan. Configure `tickets.bot_user_id`, `tickets.staff_role`, and optional `tickets.category_id` through the settings API. The ticket author must have a roster entry linked to both their local account and Discord ID. Ticket categories can override the staff role.
+
+```bash
+python manage.py ticket_channel TICKET_ID --guild GUILD_ID --user demo
+```
+
+The command previews by default. Adding `--send` requires `ENABLE_DISCORD_DELIVERY=1` and `DISCORD_BOT_TOKEN`; it creates or updates a private channel, synchronizes transcript messages, and makes closed tickets read-only for their author. The bot needs the corresponding Discord channel/message permissions. Remote behavior is tested with mocks only. HTTP success followed by a local database failure can still require manual reconciliation.
