@@ -36,6 +36,17 @@ with sync_playwright() as p:
         page.get_by_label('Kills',exact=True).fill('20');page.get_by_label('Deaths',exact=True).fill('4');page.get_by_label('War class',exact=True).fill('Warrior')
         page.get_by_role('button',name='Save',exact=True).click();page.wait_for_function('!document.querySelector("#dialog").open || document.querySelector("#form-error").textContent');assert not page.locator('#dialog').is_visible(), page.locator('#form-error').inner_text()
         assert page.locator('#panel td').filter(has_text='20').count()>0
+        page.get_by_role('button',name='Details',exact=True).click()
+        page.locator('[data-detail-kills]').fill('24');page.get_by_role('button',name='Save row',exact=True).click()
+        page.wait_for_function("state.records.war[0].participants[0].kills===24")
+        assert page.locator('[data-detail-kills]').input_value()=='24'
+        page.get_by_label('Sort players',exact=True).select_option('name')
+        page.get_by_role('button',name='Close',exact=True).click()
+        page.locator('nav').get_by_role('button',name='Analytics',exact=True).click()
+        assert page.get_by_role('img',name='K/D across recorded wars',exact=True).count()==1
+        assert page.locator('#class-bubbles [data-bubble]').count()>0
+        page.locator('[data-priority-toggle]').first.uncheck()
+        assert page.locator('[data-priority-line]').first.evaluate("node=>node.style.display")=='none'
         page.locator('nav').get_by_role('button',name='Signups',exact=True).click();page.get_by_role('button',name='Create event',exact=True).click();page.get_by_label('Title',exact=True).fill('UI test event');page.get_by_role('button',name='Save',exact=True).click();page.wait_for_function('!document.querySelector("#dialog").open || document.querySelector("#form-error").textContent');assert not page.locator('#dialog').is_visible(), page.locator('#form-error').inner_text()
         assert page.get_by_role('heading',name='UI test event',exact=True).count()==1
         page.locator('nav').get_by_role('button',name='Gear',exact=True).click();page.get_by_role('button',name='Update gear',exact=True).click()
@@ -59,7 +70,7 @@ with sync_playwright() as p:
         parsed=page.evaluate("async()=>await parseIkusaText('[23:59:58] Alpha has killed Enemy from Rival\\n[00:00:02] Alpha died to Enemy from Rival','2026-09-11','+12:00')")
         assert len(parsed)==2 and parsed[1]['player']=='Enemy'
         assert not errors,errors
-        print('Browser passed: OpenIQ branding, 12 tabs, mobile layout, member search/create, war entry, event creation, gear update, settings preservation, ticket/welcome/access role configuration, browser IKUSA parsing, no JavaScript errors.')
+        print('Browser passed: OpenIQ branding, 12 tabs, mobile layout, member search/create, war entry/inline edit, analytics overlays, event creation, gear update, settings preservation, ticket/welcome/access role configuration, browser IKUSA parsing, no JavaScript errors.')
     except Exception:
         print('FORM ERROR:',page.locator('#form-error').inner_text())
         print('INVALID:',page.evaluate('Array.from(document.querySelectorAll("#action-form :invalid")).map(e=>({tag:e.tagName,type:e.type,value:e.value,message:e.validationMessage}))'))
