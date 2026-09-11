@@ -33,7 +33,7 @@ live installation checks remain outstanding.
 - [ ] **AUTH-05 — First-run setup screen (reserved for UX contributor).** Let an authorized Discord owner select
   a server, set region and guild name, configure the bot invite, and see which
   setup steps remain.
-- [ ] **AUTH-06 — Guild recovery constraints.** Require verified Discord authority
+- [x] **AUTH-06 — Guild recovery constraints.** Require verified Discord authority
   when applying an adoption key and audit both its issuer and redeemer.
 
 ## 2. Discord bot

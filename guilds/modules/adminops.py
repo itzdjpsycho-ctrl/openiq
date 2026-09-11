@@ -19,8 +19,10 @@ def handle(g,action,p,role,user):
         if target==user and tier!='owner' and Access.objects.filter(guild=g,role='owner').count()==1: raise Invalid('Assign another owner before demoting yourself')
         Access.objects.update_or_create(guild=g,user=target,defaults={'role':tier}); return {'username':target.username,'role':tier}
     if action=='adoption_key':
-        token=secrets.token_urlsafe(24); save(g,'adoption',{'token_hash':hashlib.sha256(token.encode()).hexdigest(),'used':False,'expires':(datetime.now(timezone.utc)+timedelta(days=1)).isoformat()},'current'); return {'key':token}
+        token=secrets.token_urlsafe(24); save(g,'adoption',{'token_hash':hashlib.sha256(token.encode()).hexdigest(),'issued_by':user.username,'used':False,'expires':(datetime.now(timezone.utc)+timedelta(days=1)).isoformat()},'current'); return {'key':token}
     if action=='adopt':
+        from django.conf import settings
+        if not settings.ALLOW_LOCAL_LOGIN:raise Invalid('Use the Discord-verified recovery endpoint to move a guild')
         r=get(g,'adoption','current')
         if r.data['used'] or r.data.get('expires','')<now() or not secrets.compare_digest(r.data.get('token_hash',''),hashlib.sha256(str(p['key']).encode()).hexdigest()): raise Invalid('Invalid adoption key')
         g.server_id=text(p['server_id']); g.save(); r.data['used']=True; r.save(); return {'server_id':g.server_id}

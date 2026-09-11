@@ -291,6 +291,7 @@ class WorkflowTests(TestCase):
             self.act('integrations','roster_source',{'url':'https://www.naeu.playblackdesert.com/Adventure/Guild'})
             self.assertTrue(self.act('integrations','roster_fetch',{'url':'https://www.naeu.playblackdesert.com/Adventure/Guild'})['requires_confirmation'])
             self.assertEqual(self.act('commands','run',{'command':'sync roster'})['added'],1)
+    @override_settings(ALLOW_LOCAL_LOGIN=True)
     def test_adoption_expiration_and_direct_adopt(self):
         token=self.act('admin','adoption_key')['key']
         with self.assertRaises(Invalid):self.act('admin','adopt',{'key':'wrong','server_id':'123'})

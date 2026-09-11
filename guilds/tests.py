@@ -212,6 +212,7 @@ class DomainTests(TestCase):
         self.run_action('intelligence','lookup_backoff',{'until':'2099-01-01T00:00:00Z'})
         self.assertEqual(self.run_action('intelligence','resolve_queue',{})['resolved'],0)
         self.assertEqual(get(self.g,'lookup','enemy').data['status'],'pending')
+    @override_settings(ALLOW_LOCAL_LOGIN=True)
     def test_adoption_key_hidden_and_one_use(self):
         key=self.run_action('admin','adoption_key',{})['key']
         outsider=User.objects.create_user('newowner',password='testing-123')

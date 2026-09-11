@@ -1,5 +1,13 @@
 # Independent prototype contracts
 
+Guild recovery requires a signed-in Discord user, an unexpired single-use adoption
+key, and a fresh Discord API check confirming owner, Administrator, or Manage Guild
+authority on the destination server. A failed authority check does not consume the
+key. Recovery records the issuer, redeemer, and old/new server IDs in the audit
+trail without storing the plaintext key. Production callers use POST `/recover/`
+with `guild`, `server_id`, and `key` and the session's CSRF token. The older direct
+`admin.adopt` action is restricted to explicit local development login mode.
+
 ## Calculations
 
 - Guild K/D divides total included kills by total included deaths, never averages individual ratios. A positive kill count with zero deaths is represented by JSON `null` and displayed as infinity; 0/0 is displayed as 0.

@@ -112,6 +112,16 @@ def recover(request):
     from .modules.core import now,text
     try:
         p=json.loads(request.body)
+        server_id=text(p['server_id'],'Discord server ID',30)
+        if not settings.ALLOW_LOCAL_LOGIN:
+            from .discord_auth import can_manage_server,synchronize
+            tokens=request.session.get('discord_tokens')
+            if not tokens or not request.user.username.startswith('discord_'):raise PermissionDenied('Discord login is required for guild recovery')
+            import httpx
+            try:servers=synchronize(request.user,tokens['access'])
+            except (httpx.HTTPError,KeyError,ValueError,TypeError):raise PermissionDenied('Discord authority could not be verified')
+            request.session['discord_guilds']=servers
+            if not any(server['id']==server_id and can_manage_server(server) for server in servers):raise PermissionDenied('Manage Guild permission is required on the destination Discord server')
         with transaction.atomic():
             g=get_object_or_404(Guild,pk=p['guild'])
             from django.db.models import F
@@ -120,10 +130,11 @@ def recover(request):
             digest=hashlib.sha256(str(p['key']).encode()).hexdigest()
             if not key or key.data['used'] or key.data.get('expires','')<now() or not secrets.compare_digest(key.data.get('token_hash',''),digest):
                 raise Invalid('Invalid or expired adoption key')
-            g.server_id=text(p['server_id'],'Discord server ID',30);g.save()
-            key.data['used']=True;key.save()
+            previous_server=g.server_id
+            g.server_id=server_id;g.save()
+            key.data.update(used=True,redeemed_by=request.user.username);key.save()
             Access.objects.update_or_create(guild=g,user=request.user,defaults={'role':'owner'})
-            Audit.objects.create(guild=g,actor=request.user.username,action='admin.recover',data={})
+            Audit.objects.create(guild=g,actor=request.user.username,action='admin.recover',data={'issued_by':key.data.get('issued_by','unknown'),'redeemed_by':request.user.username,'previous_server':previous_server,'server_id':server_id})
         return JsonResponse({'id':g.pk})
     except (Invalid,KeyError,ValueError,TypeError) as e:return JsonResponse({'error':str(e)},status=400)
 

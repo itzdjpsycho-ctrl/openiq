@@ -12,6 +12,29 @@ from .discord_auth import synchronize
 
 HTML='<a href="/Adventure/Profile?name=A">Alpha</a><a href="/Adventure/Profile?name=A">Alpha</a>'
 class AdapterTests(TestCase):
+    def test_recovery_requires_fresh_destination_authority_and_audits_parties(self):
+        from .services import execute
+        from .models import Record,Audit
+        owner=User.objects.create_user('issuer');guild=Guild.objects.create(name='Recovery',server_id='99')
+        Access.objects.create(user=owner,guild=guild,role='owner')
+        key=execute(owner,guild.pk,'admin','adoption_key',{})['key']
+        with self.assertRaises(Invalid):execute(owner,guild.pk,'admin','adopt',{'key':key,'server_id':'100'})
+        payload={'guild':guild.pk,'key':key,'server_id':'100'}
+        self.client.force_login(owner)
+        self.assertEqual(self.client.post('/recover/',payload,content_type='application/json').status_code,403)
+        user=User.objects.create_user('discord_789');self.client.force_login(user)
+        session=self.client.session;session['discord_tokens']={'access':'test'};session['discord_checked']=time.time();session.save()
+        for result in [[],[{'id':'100','permissions':'0'}]]:
+            with patch('guilds.discord_auth.synchronize',return_value=result):
+                self.assertEqual(self.client.post('/recover/',payload,content_type='application/json').status_code,403)
+        with patch('guilds.discord_auth.synchronize',side_effect=httpx.ConnectError('offline')):
+            self.assertEqual(self.client.post('/recover/',payload,content_type='application/json').status_code,403)
+        self.assertFalse(Record.objects.get(guild=guild,kind='adoption').data['used'])
+        with patch('guilds.discord_auth.synchronize',return_value=[{'id':'100','permissions':'32'}]):
+            self.assertEqual(self.client.post('/recover/',payload,content_type='application/json').status_code,200)
+            self.assertEqual(self.client.post('/recover/',payload,content_type='application/json').status_code,400)
+        audit=Audit.objects.get(guild=guild,action='admin.recover')
+        self.assertEqual(audit.data,{'issued_by':'issuer','redeemed_by':'discord_789','previous_server':'99','server_id':'100'})
     def test_member_login_is_discord_only_unless_development_override_is_enabled(self):
         with override_settings(ALLOW_LOCAL_LOGIN=False):
             response=self.client.get('/login/')
