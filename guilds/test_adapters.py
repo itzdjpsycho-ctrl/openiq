@@ -3,6 +3,7 @@ import os,time,io
 from unittest.mock import Mock,patch
 import httpx
 from django.test import TestCase
+from django.test import override_settings
 from django.contrib.auth.models import User
 from .models import Guild,Access
 from .modules.core import Invalid
@@ -11,6 +12,14 @@ from .discord_auth import synchronize
 
 HTML='<a href="/Adventure/Profile?name=A">Alpha</a><a href="/Adventure/Profile?name=A">Alpha</a>'
 class AdapterTests(TestCase):
+    def test_member_login_is_discord_only_unless_development_override_is_enabled(self):
+        with override_settings(ALLOW_LOCAL_LOGIN=False):
+            response=self.client.get('/login/')
+            self.assertRedirects(response,'/auth/discord/',fetch_redirect_response=False)
+        with override_settings(ALLOW_LOCAL_LOGIN=True):
+            response=self.client.get('/login/')
+            self.assertEqual(response.status_code,200)
+            self.assertContains(response,'Sign in with Discord')
     def test_roster_fetch_allowlist_rate_limit_and_empty_page(self):
         response=Mock(status_code=200,text=HTML)
         with patch('httpx.get',return_value=response) as request:

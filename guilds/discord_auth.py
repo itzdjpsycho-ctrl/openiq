@@ -2,7 +2,9 @@
 import os,secrets,time
 from urllib.parse import urlencode
 import httpx
+from django.conf import settings
 from django.contrib.auth import login,logout
+from django.contrib.auth.views import LoginView
 from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect
@@ -10,10 +12,14 @@ from django.db import transaction
 from guilds.models import Guild,Access
 
 API='https://discord.com/api/v10'
+def login_entry(request):
+    if settings.ALLOW_LOCAL_LOGIN:return LoginView.as_view()(request)
+    return redirect('/auth/discord/')
+
 def credentials():return os.getenv('DISCORD_CLIENT_ID'),os.getenv('DISCORD_CLIENT_SECRET'),os.getenv('DISCORD_REDIRECT_URI','http://127.0.0.1:8765/auth/discord/callback/')
 def begin(request):
     client,secret,uri=credentials()
-    if not client or not secret:return HttpResponseBadRequest('Discord login is not configured. Use a local account for the prototype.')
+    if not client or not secret:return HttpResponseBadRequest('Discord login is not configured. Ask the OpenIQ operator to configure it.')
     state=secrets.token_urlsafe(32);request.session['oauth_state']={'value':state,'at':time.time()}
     return redirect('https://discord.com/oauth2/authorize?'+urlencode({'client_id':client,'redirect_uri':uri,'response_type':'code','scope':'identify guilds guilds.members.read','state':state}))
 
@@ -56,7 +62,7 @@ def callback(request):
         synchronize(user,tokens['access_token']);login(request,user)
         request.session['discord_tokens']={'access':tokens['access_token'],'refresh':tokens.get('refresh_token'),'expires':time.time()+tokens['expires_in']};request.session['discord_checked']=time.time()
         return redirect('/')
-    except (httpx.HTTPError,KeyError,ValueError):return HttpResponseBadRequest('Discord login could not be completed. Retry or use a local account.')
+    except (httpx.HTTPError,KeyError,ValueError):return HttpResponseBadRequest('Discord login could not be completed. Retry or contact the OpenIQ operator.')
 
 class RefreshDiscordRoles:
     def __init__(self,get_response):self.get_response=get_response

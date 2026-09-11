@@ -15,7 +15,7 @@ verification and the choice of a public host remain external launch checks.
 - [x] **AUTH-01 — Rotating backend recovery administrator.** Compose enables one
   Django admin account, rotates its generated password on every web start, prints
   it to the web log, and can disable the account through configuration.
-- [ ] **AUTH-02 — Discord-only member login.** Route the normal login entry point
+- [x] **AUTH-02 — Discord-only member login.** Route the normal login entry point
   directly to Discord OAuth in production. Keep password login available only
   behind an explicit development setting; `/admin/` remains available to the
   rotating backend administrator.

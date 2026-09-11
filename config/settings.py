@@ -3,6 +3,7 @@ import os
 import secrets
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = os.getenv('DEBUG', '1') == '1'
+ALLOW_LOCAL_LOGIN = os.getenv('ALLOW_LOCAL_LOGIN', '0') == '1'
 DATA_DIR = Path(os.getenv('OPENIQ_DATA_DIR',str(BASE_DIR)))
 DATA_DIR.mkdir(parents=True,exist_ok=True)
 key_file = DATA_DIR / '.secret-key'

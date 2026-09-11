@@ -13,7 +13,10 @@ cd /home/user/src/openiq
 docker compose up --build -d
 ```
 
-Open **http://127.0.0.1:8765/** and sign in with `demo` / `prototype-local-2026`. Compose initializes demo data only when missing. The `openiq-data` named volume persists the database and signing key across container replacement. Existing host demo data is not copied into the image or container.
+Open **http://127.0.0.1:8765/** and sign in through Discord. Normal member
+login is Discord-only. The `openiq-data` named volume persists the database and
+signing key across container replacement. Existing host data is not copied into
+the image or container.
 
 ```bash
 # Inspect status and logs.
@@ -37,7 +40,11 @@ docker run -d --name openiq -p 127.0.0.1:8765:8000 \
 
 The application runs as UID 10001, includes Tesseract and uses Gunicorn/WhiteNoise to serve the app and static assets. It does not require a host Python installation. `.dockerignore` excludes the host database, signing key, environment files, Git metadata, virtual environment and screenshots.
 
-Copy `.env.example` to `.env` to customize the port and initial demo password. `SEED_DEMO=0` disables demo initialization. For an empty installation, run `docker compose exec web python manage.py createsuperuser`, grant that account normal guild access through New guild, then add other accounts as needed. `HTTPS=1` enables secure cookies and HTTPS redirects when deployed behind TLS; set `TRUST_PROXY=1` only for a trusted reverse proxy that controls forwarded headers.
+Copy `.env.example` to `.env` to customize the deployment. Set the Discord OAuth
+variables before normal use. `ALLOW_LOCAL_LOGIN=1` exposes the password form for
+development fixtures only; leave it disabled for a guild installation. `HTTPS=1`
+enables secure cookies and HTTPS redirects when deployed behind TLS; set
+`TRUST_PROXY=1` only for a trusted reverse proxy that controls forwarded headers.
 
 Compose enables one break-glass Django backend account by default. Each web-container start creates or rotates its random password and prints the new `/admin/` credential to `docker compose logs web`; the scheduler never rotates it. Set `ENABLE_BACKEND_ADMIN=0` to disable that managed account on the next web start, or change its stable username with `BACKEND_ADMIN_USERNAME`. This account is for backend recovery and inspection, not normal guild membership.
 
@@ -50,8 +57,8 @@ cd /home/user/src/openiq
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.lock
 .venv/bin/python manage.py migrate
-.venv/bin/python manage.py seed_demo
-.venv/bin/python manage.py runserver 127.0.0.1:8765 --noreload
+ALLOW_LOCAL_LOGIN=1 .venv/bin/python manage.py seed_demo
+ALLOW_LOCAL_LOGIN=1 .venv/bin/python manage.py runserver 127.0.0.1:8765 --noreload
 ```
 
 Open **http://127.0.0.1:8765/**. Demo accounts:
@@ -113,7 +120,7 @@ No Discord messages have been sent. No bot has been connected.
 .venv/bin/python scripts/capture_desktop.py
 ```
 
-Discord OAuth needs `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, and `DISCORD_REDIRECT_URI` (default `http://127.0.0.1:8765/auth/discord/callback/`). Configure guild `server_id` and role IDs. User OAuth requests profile, guild-list and own guild-membership read scopes. Role refresh fails closed. Local accounts are independent of Discord.
+Discord OAuth needs `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, and `DISCORD_REDIRECT_URI` (default `http://127.0.0.1:8765/auth/discord/callback/`). Configure guild `server_id` and role IDs. User OAuth requests profile, guild-list and own guild-membership read scopes. Role refresh fails closed. Password login is available only when `ALLOW_LOCAL_LOGIN=1`; Django's separate `/admin/` login remains available for the managed recovery administrator.
 
 The optional bot uses `DISCORD_BOT_TOKEN` and requires `ENABLE_DISCORD_DELIVERY=1` before it will connect. `runbot --sync` registers the command tree. Its prototype slash interface accepts an `arguments` JSON object and optional `guild_name`; the dashboard offers the friendlier forms. `deliver ID` only previews an outbox item; `deliver ID --send` also requires delivery enablement and a numeric target channel. This code has not been live-tested. Do not enable it until you intend to connect/send.
 
