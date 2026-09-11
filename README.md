@@ -26,6 +26,9 @@ docker compose logs --tail=100 web
 # Enable the optional continuous scheduler (notifications remain previews).
 docker compose --profile jobs up -d
 
+# Start the Discord bot after setting its token and enabling delivery in .env.
+docker compose --profile discord up -d
+
 # Stop containers while retaining data.
 docker compose down
 ```
@@ -122,7 +125,13 @@ No Discord messages have been sent. No bot has been connected.
 
 Discord OAuth needs `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, and `DISCORD_REDIRECT_URI` (default `http://127.0.0.1:8765/auth/discord/callback/`). Configure guild `server_id` and role IDs. User OAuth requests profile, guild-list and own guild-membership read scopes. Role refresh fails closed. Password login is available only when `ALLOW_LOCAL_LOGIN=1`; Django's separate `/admin/` login remains available for the managed recovery administrator.
 
-The optional bot uses `DISCORD_BOT_TOKEN` and requires `ENABLE_DISCORD_DELIVERY=1` before it will connect. `runbot --sync` registers the command tree. Its prototype slash interface accepts an `arguments` JSON object and optional `guild_name`; the dashboard offers the friendlier forms. `deliver ID` only previews an outbox item; `deliver ID --send` also requires delivery enablement and a numeric target channel. This code has not been live-tested. Do not enable it until you intend to connect/send.
+The bot runs as its own Compose service with the `discord` profile. Set
+`DISCORD_BOT_TOKEN` and `ENABLE_DISCORD_DELIVERY=1`, then start the profile. It
+shares the persistent data volume, waits for the web service to be healthy,
+registers the command tree, and restarts independently. `deliver ID` only
+previews an outbox item; `deliver ID --send` requires delivery enablement and a
+numeric target channel. Remote behavior is covered with controlled mocks but
+still needs the staging-guild launch check before a real guild depends on it.
 
 Twitch uses `TWITCH_CLIENT_ID` and `TWITCH_ACCESS_TOKEN`; without them the demo directory is explicitly labeled as fixture data.
 
