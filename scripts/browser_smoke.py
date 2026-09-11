@@ -41,10 +41,25 @@ with sync_playwright() as p:
         page.locator('nav').get_by_role('button',name='Gear',exact=True).click();page.get_by_role('button',name='Update gear',exact=True).click()
         for label,value in [('AP','300'),('Awakening AP','302'),('DP','400')]:page.get_by_label(label,exact=True).fill(value)
         page.get_by_role('button',name='Save',exact=True).click();page.wait_for_function('!document.querySelector("#dialog").open || document.querySelector("#form-error").textContent');assert not page.locator('#dialog').is_visible(), page.locator('#form-error').inner_text();assert page.locator('#panel strong').filter(has_text='702').count()==1
+        page.evaluate("async()=>await call('admin','settings',{config:{channels:{events:'789'},weekly:{weekday:2,hour:18,timezone:'UTC'}}})")
+        page.locator('nav').get_by_role('button',name='Settings',exact=True).click()
+        page.get_by_role('button',name='Configure guild',exact=True).click();page.get_by_label('Bot channel',exact=True).fill('123')
+        page.get_by_role('button',name='Save',exact=True).click();page.wait_for_function('!document.querySelector("#dialog").open')
+        assert page.evaluate("state.guild.config.channels.events==='789' && state.guild.config.weekly.hour===18")
+        page.get_by_role('button',name='Configure tickets',exact=True).click()
+        for label,value in [('Bot user ID','200'),('Ticket staff role ID','300'),('Parent category ID (optional)','400')]:page.get_by_label(label,exact=True).fill(value)
+        page.get_by_role('button',name='Save',exact=True).click();page.wait_for_function('!document.querySelector("#dialog").open')
+        assert page.evaluate("state.guild.config.tickets.staff_role==='300'")
+        page.get_by_role('button',name='Configure welcome',exact=True).click();page.get_by_label('Role label,Discord role ID per line',exact=True).fill('Raider,500')
+        page.get_by_role('button',name='Save',exact=True).click();page.wait_for_function('!document.querySelector("#dialog").open')
+        assert page.evaluate("state.guild.config.welcome.role_ids.Raider==='500'")
+        page.get_by_role('button',name='Configure roles',exact=True).click();page.get_by_label('admin role IDs, one per line',exact=True).fill('600')
+        page.get_by_role('button',name='Save',exact=True).click();page.wait_for_function('!document.querySelector("#dialog").open')
+        assert page.evaluate("state.guild.config.roles.admin[0]==='600'")
         parsed=page.evaluate("async()=>await parseIkusaText('[23:59:58] Alpha has killed Enemy from Rival\\n[00:00:02] Alpha died to Enemy from Rival','2026-09-11','+12:00')")
         assert len(parsed)==2 and parsed[1]['player']=='Enemy'
         assert not errors,errors
-        print('Browser passed: OpenIQ branding, 12 tabs, mobile layout, member search/create, war entry, event creation, gear update, browser IKUSA parsing, no JavaScript errors.')
+        print('Browser passed: OpenIQ branding, 12 tabs, mobile layout, member search/create, war entry, event creation, gear update, settings preservation, ticket/welcome/access role configuration, browser IKUSA parsing, no JavaScript errors.')
     except Exception:
         print('FORM ERROR:',page.locator('#form-error').inner_text())
         print('INVALID:',page.evaluate('Array.from(document.querySelectorAll("#action-form :invalid")).map(e=>({tag:e.tagName,type:e.type,value:e.value,message:e.validationMessage}))'))
