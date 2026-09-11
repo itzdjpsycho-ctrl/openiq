@@ -6,6 +6,18 @@ from .community import preview
 from .analytics import calculate
 
 def handle(g,action,p,role,user):
+    if action in ['challenge','accept_challenge']:
+        import secrets
+        if action=='challenge':
+            opponent=get(g,'member',p['opponent'])
+            if not opponent.data.get('user_id'):raise Invalid('Choose an opponent linked to an account')
+            if str(opponent.data['user_id'])==str(user.pk):raise Invalid('Choose another player')
+            return public(save(g,'challenge',{'challenger':user.username,'challenger_id':user.pk,'opponent':opponent.data['name'],'opponent_id':str(opponent.data['user_id']),'roll':secrets.randbelow(100)+1,'status':'pending'}))
+        challenge=get(g,'challenge',p['challenge'])
+        if str(user.pk)!=challenge.data['opponent_id']:raise PermissionDenied('Only the challenged player can accept')
+        if challenge.data['status']!='pending':raise Invalid('Challenge already completed')
+        other=secrets.randbelow(100)+1;mine=challenge.data['roll']
+        challenge.data.update(opponent_roll=other,status='complete',winner=challenge.data['challenger'] if mine>other else challenge.data['opponent'] if other>mine else 'Draw');challenge.save();return public(challenge)
     require(role)
     if action=='schedule':
         require(role,'owner');kind=choice(p['kind'],['weekly','sync'],'schedule')
@@ -58,9 +70,4 @@ def handle(g,action,p,role,user):
         member.data.setdefault('community_roles',[])
         if selected not in member.data['community_roles']:member.data['community_roles'].append(selected)
         member.save();return public(member)
-    if action=='challenge':
-        opponent=get(g,'member',p['opponent']);from .community import handle as community
-        mine=community(g,'roll',{},role,user)['roll'];import random
-        theirs=random.SystemRandom().randint(1,100)
-        return public(save(g,'challenge',{'challenger':user.username,'opponent':opponent.data['name'],'roll':mine,'opponent_roll':theirs,'winner':user.username if mine>theirs else opponent.data['name'] if theirs>mine else 'Draw','mode':'local simulated opponent'}))
     raise Invalid('Unknown operations action')

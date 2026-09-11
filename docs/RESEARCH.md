@@ -59,3 +59,8 @@ Utilities: `help`, `welcome`, `reminder set/list/cancel`, `roll`, `roast`, `tap`
 Django 5.2 provides database migrations, authentication, sessions, CSRF protection and relational transactions. SQLite supports a local installation; a production installation should use PostgreSQL when concurrent writes require it. Server-rendered accessible pages plus JavaScript provide the dashboard without a frontend build dependency. Discord is a separate process using the same domain services. OCR is local Tesseract with review before persistence. External adapters are separate from calculations so recorded fixtures can validate domain behavior offline.
 
 The installed Django release supports the host's Python 3.14; see [Django 5.2 release notes](https://docs.djangoproject.com/en/5.2/releases/5.2/).
+
+
+## Later packet-format finding
+
+A deeper search located [sch-28/ikusa_logger](https://github.com/sch-28/ikusa_logger), including its public field-calibration format. The checked-in calibration reports patch **2023-04-19**. OpenIQ now has an independently written configurable decoder with per-flow TCP assembly, offline PCAP and explicit-interface capture adapters. Tests generate packets using the historical field locations. This establishes prototype decoding behavior, not compatibility with the current BDO patch. Public field offsets and the text-log contract were used as facts; no upstream source implementation is distributed in this repository.

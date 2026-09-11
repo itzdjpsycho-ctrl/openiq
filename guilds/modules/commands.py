@@ -11,7 +11,7 @@ ALIASES={
  'gearupdate':('gear','save'),'deletegear':('gear','delete'),'link-twitch':('integrations','twitch_link'),
  'weeklysummary':('community','weekly'),'catchup-summaries':('operations','catchup'),
  'unsigned ping':('community','ping_missing'),'unsigned message':('community','ping_missing'),
- 'performance-flags notify':('community','welcome'),'config':('admin','settings'),'purgestats':('admin','purge'),
+ 'performance-flags notify':('coaching','notify'),'config':('admin','settings'),'purgestats':('admin','purge'),
  'adopt':('admin','adopt'),'welcome':('community','welcome'),'reminder set':('community','reminder'),
  'reminder cancel':('community','cancel_reminder'),'roll':('community','roll'),'roast':('ai','roast'),
  'tap':('community','tap'),'notreadingallthat':('ai','summary'),
@@ -31,6 +31,11 @@ def dispatch(g,command,p,role,user):
             m=own_member(g,user)
             if not m: raise Invalid('Link your member first')
             p={**p,'member':m.key}
+        if command=='sync roster' and 'names' not in p:
+            from .integrations import fetch_roster
+            url=g.config.get('sync',{}).get('url')
+            if not url:raise Invalid('Configure a verified roster source or provide reviewed names')
+            p={**p,'names':fetch_roster(url)}
         return MODULES[module].handle(g,action,p,role,user)
     if command=='help':return {'commands':COMMANDS}
     if command=='guildstats':return calculate(g)['totals']
@@ -43,7 +48,11 @@ def dispatch(g,command,p,role,user):
     if command=='gear':
         member=p.get('member') or (own_member(g,user).key if own_member(g,user) else '')
         return {'gear':next((r for r in current(g) if r['member']==member),None)}
-    if command=='whois':return {'members':[public(m) for m in rows(g,'member') if str(m.data.get('discord_id'))==str(p.get('discord_id')) or str(m.data.get('user_id'))==str(p.get('user_id',user.pk))]}
+    if command=='whois':
+        found=[public(m) for m in rows(g,'member') if (p.get('discord_id') and str(m.data.get('discord_id'))==str(p['discord_id'])) or str(m.data.get('user_id'))==str(p.get('user_id',user.pk))]
+        if role=='member':
+            for member in found:member.pop('notes',None)
+        return {'members':found}
     if command=='unlinked':require(role);return {'members':[m.data['name'] for m in rows(g,'member') if m.data.get('active') and not m.data.get('discord_id')]}
     if command=='twitch-links':return {'links':{m.data['name']:m.data['twitch'] for m in rows(g,'member') if m.data.get('twitch')}}
     if command=='performance-flags list':
@@ -63,7 +72,10 @@ def dispatch(g,command,p,role,user):
         require(role);return MODULES['roster'].handle(g,'save',{'id':p['member'],'exception':command=='exception'},role,user)
     if command=='unlink':require(role);return MODULES['roster'].handle(g,'link',{'member':p['member'],'user_id':'','discord_id':''},role,user)
     if command=='unlink-twitch':return MODULES['integrations'].handle(g,'twitch_link',{'member':p['member'],'handle':''},role,user)
-    if command=='reset-class':return MODULES['roster'].handle(g,'class',{'member':p.get('member') or own_member(g,user).key,'class':'Unknown','spec':'Succession'},role,user)
+    if command=='reset-class':
+        member=p.get('member') or (own_member(g,user).key if own_member(g,user) else '')
+        if not member:raise Invalid('Link your member first')
+        return MODULES['roster'].handle(g,'class',{'member':member,'class':'Unknown','spec':'Succession'},role,user)
     if command=='gearping':
         require(role);submitted={x['member'] for x in current(g)}
         return preview(g,ident(),'Missing gear: '+', '.join(m.data['name'] for m in rows(g,'member') if m.data.get('active') and m.key not in submitted))

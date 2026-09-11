@@ -15,6 +15,8 @@ def process(user,custom_id):
     _,gid,key,index=fields;g=Guild.objects.get(pk=gid);access(user,g);member=own_member(g,user)
     if not member:raise Invalid('Ask an officer to link your account first')
     event=Record.objects.get(guild=g,kind='event',key=key)
-    try:team='' if index=='withdraw' else event.data['teams'][int(index)]['name']
+    try:
+        if index!='withdraw' and (not index.isdecimal() or int(index)>=len(event.data['teams'])):raise ValueError()
+        team='' if index=='withdraw' else event.data['teams'][int(index)]['name']
     except (ValueError,IndexError):raise Invalid('Team no longer exists')
     return execute(user,g.pk,'events','signup',{'event':key,'member':member.key,'team':team})

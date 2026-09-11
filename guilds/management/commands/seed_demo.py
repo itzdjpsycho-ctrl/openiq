@@ -50,4 +50,4 @@ class Command(BaseCommand):
         invoke('live','ingest',{'session':session['id'],'events':[{'id':f'demo-{i}','at':(start+timedelta(seconds=i*23)).isoformat(),'kind':'kill' if i%3 else 'death','player':names[i%12] if i%3 else 'Opponent','target':'Opponent' if i%3 else names[i%12],'guild':['Moonfall','Iron Vow'][i%2],'class':classes[i%12]} for i in range(60)]})
         invoke('live','stop',{'session':session['id']})
         save(guild,'retention',{'at':now(),'members':12})
-        self.stdout.write('Demo ready: demo / officer / member. Password from DEMO_PASSWORD, default prototype-local-2026. Start on http://127.0.0.1:8000/')
+        self.stdout.write('Demo ready: demo / officer / member. Password from DEMO_PASSWORD, default prototype-local-2026. Start on http://127.0.0.1:8765/')

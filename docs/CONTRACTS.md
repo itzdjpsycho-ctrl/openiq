@@ -10,7 +10,7 @@
 - Improvement compares the last and first included single-war K/D using a denominator floor of one. Consistency uses the population standard deviation of those ratios. Award definitions differ from a possible upstream implementation.
 - Event waitlists use signup time within the selected team. Withdrawing promotes the earliest remaining signup. Moves enter the target team's queue at the current time. Repeating a manually requested event preserves wall-clock time in its configured timezone.
 - Archiving an event adds one pity point to each waitlisted member, once per event. Three points can be treated as a prototype token; automatic token-based prioritization is not implemented.
-- Scheduled jobs write a unique job record per schedule/date. Notification output stays in the outbox. The prototype does not run an autonomous daemon unless a caller repeatedly invokes `tick`.
+- Scheduled jobs write a unique job record per schedule/date. Notification output stays in the outbox. The `scheduler` management command or optional Compose jobs profile runs jobs continuously; individual `tick` calls remain available.
 
 ## API
 
@@ -55,3 +55,12 @@ Discord OAuth follows the [authorization code flow](https://docs.discord.com/dev
 Twitch uses its [streams API](https://dev.twitch.tv/docs/api/reference/#get-streams). Partner flags in fixture data are fixture metadata; the live adapter does not infer partner status.
 
 Notification delivery is opt-in and separate from preview generation. HTTP retries around a successful remote post followed by a local persistence failure may duplicate a message; a production queue needs durable delivery reconciliation.
+
+
+## Packet calibration and capture
+
+`guilds/packets.py` assembles TCP bytes independently per source/destination address and port tuple. It trims retransmitted overlaps, buffers bounded out-of-order segments and searches for the configured record marker. Calibration defines record size, name fields, encoding, kill-flag nibble and allowed server networks. Invalid/truncated name records are rejected. Each event gets a stream-position-derived identifier.
+
+`fixtures/calibration-historical.json` contains historical field positions and a documentation-only server CIDR. `fixtures/combat-synthetic.pcap` is generated from synthetic MAC/IP addresses and player names. The synthetic-PCAP test never sniffs live traffic. Scapy may require interface-enumeration access during import even for offline use.
+
+Current-patch calibration, authenticated network traces, prolonged capture, TCP sequence wraparound, and exhaustive packet-loss recovery remain unverified. The decoder does not decrypt unknown payloads or bypass game protections.

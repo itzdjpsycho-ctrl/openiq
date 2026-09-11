@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+import re
+from urllib.parse import urlparse
 from .core import *
 
 def reconcile(data):
@@ -24,6 +26,7 @@ def handle(g,action,p,role,user):
         if not isinstance(teams,list) or not teams: raise Invalid('Add at least one team')
         for t in teams:
             t['name']=text(t['name'],'team name',80); t['capacity']=integer(t['capacity'],'capacity',1,1000)
+            t['group']=text(t['group'],'team group',80) if t.get('group') else ''
         if len({t['name'] for t in teams})!=len(teams): raise Invalid('Team names must be unique')
         if any(s['team'] not in [t['name'] for t in teams] for s in old.get('signups',[])): raise Invalid('Move existing signups before removing a team')
         tz=p.get('timezone',old.get('timezone','Pacific/Auckland'))
@@ -32,6 +35,10 @@ def handle(g,action,p,role,user):
         d={**old,'title':text(p.get('title',old.get('title'))),'type':choice(p.get('type',old.get('type','Node')),['Node','Siege','Practice','Custom'],'event type'),'at':timestamp(p.get('at',old.get('at'))),'timezone':tz,'teams':teams,'locked':bool(p.get('locked',old.get('locked',False))),'archived':bool(p.get('archived',old.get('archived',False))),'recurrence_days':integer(p.get('recurrence_days',old.get('recurrence_days',0)),'repeat days',0,365)}
         for key in ['image','accent','mention_roles']:
             d[key]=p.get(key,old.get(key,''))
+        if d['image']:
+            image=urlparse(text(d['image'],'image URL',2000))
+            if image.scheme!='https' or not image.hostname or image.username:raise Invalid('Use an HTTPS image URL')
+        if d['accent'] and not re.fullmatch(r'#[0-9a-fA-F]{6}',d['accent']):raise Invalid('Accent must be a six-digit hex color')
         reconcile(d)
         if d['archived'] and not old.get('pity_awarded'):
             for signup in d['signups']:
@@ -44,7 +51,7 @@ def handle(g,action,p,role,user):
     if action=='template':
         e=get(g,'event',p['event']); return public(save(g,'template',{'name':text(p['name']),'event':{k:v for k,v in e.data.items() if k!='signups'}}))
     if action=='from_template':
-        t=get(g,'template',p['template']); return handle(g,'save',{**t.data['event'],'at':p['at']},role,user)
+        t=get(g,'template',p['template']); return handle(g,'save',{**t.data['event'],'at':p['at'],'locked':False,'archived':False},role,user)
     if action=='next':
         e=get(g,'event',p['event'])
         if e.data.get('next_event'): return public(get(g,'event',e.data['next_event']))

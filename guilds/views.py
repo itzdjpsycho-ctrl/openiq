@@ -20,11 +20,12 @@ def state(request,guild_id):
     g=get_object_or_404(Guild,pk=guild_id); role=access(request.user,g)
     records={}
     private={'lead','assignment','adoption','application','import'}
-    for r in Record.objects.filter(guild=g).exclude(kind='alliance'):
+    for r in Record.objects.filter(guild=g).exclude(kind__in=['alliance','adoption']):
         if role=='member' and r.kind in private: continue
         if r.kind in ['ticket','reminder','minigame'] and role=='member' and r.data.get('user',r.key)!=request.user.pk and str(r.data.get('user',r.key))!=str(request.user.pk): continue
         d=public(r)
         if r.kind=='member' and role=='member': d.pop('notes',None)
+        if r.kind=='challenge' and d.get('status')=='pending':d.pop('roll',None)
         if r.kind=='session': d['summary']=live.summarize(r)
         records.setdefault(r.kind,[]).append(d)
     records['alliance']=alliances.overview(g)
@@ -92,3 +93,34 @@ def ally_event(request,token):
     from .modules.core import rows
     names={m.key:m.data['name'] for m in rows(e.guild,'member')}
     return render(request,'ally_event.html',{'event':e.data,'guild':e.guild.name,'signups':[{**s,'name':names.get(s['member'],'Unknown')} for s in e.data['signups']]})
+
+
+@login_required
+@require_POST
+def recover(request):
+    import secrets,hashlib
+    from django.db import transaction
+    from .modules.core import now,text
+    try:
+        p=json.loads(request.body)
+        with transaction.atomic():
+            g=get_object_or_404(Guild,pk=p['guild'])
+            from django.db.models import F
+            Guild.objects.filter(pk=g.pk).update(revision=F('revision')+1)
+            key=Record.objects.filter(guild=g,kind='adoption',key='current').first()
+            digest=hashlib.sha256(str(p['key']).encode()).hexdigest()
+            if not key or key.data['used'] or key.data.get('expires','')<now() or not secrets.compare_digest(key.data.get('token_hash',''),digest):raise Invalid('Invalid or expired adoption key')
+            g.server_id=text(p['server_id'],'Discord server ID',30);g.save()
+            key.data['used']=True;key.save()
+            Access.objects.update_or_create(guild=g,user=request.user,defaults={'role':'owner'})
+            Audit.objects.create(guild=g,actor=request.user.username,action='admin.recover',data={})
+        return JsonResponse({'id':g.pk})
+    except (Invalid,KeyError,ValueError,TypeError) as e:return JsonResponse({'error':str(e)},status=400)
+
+
+def health(request):
+    from django.db import DatabaseError
+    try:
+        Guild.objects.exists()
+        return JsonResponse({'status':'ok','application':'OpenIQ'})
+    except DatabaseError:return JsonResponse({'status':'unavailable'},status=503)

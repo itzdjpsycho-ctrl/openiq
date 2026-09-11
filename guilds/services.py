@@ -19,5 +19,5 @@ def execute(user,guild_id,module,action,payload):
     if module not in MODULES: raise Invalid('Unknown module')
     if not isinstance(payload,dict): raise Invalid('Payload must be an object')
     result=MODULES[module].handle(g,action,payload,role,user)
-    Audit.objects.create(guild=g,actor=user.username,action=module+'.'+action,data={'result_id':result.get('id')} if isinstance(result,dict) else {})
+    if g.pk: Audit.objects.create(guild=g,actor=user.username,action=module+'.'+action,data={'result_id':result.get('id')} if isinstance(result,dict) else {})
     return result

@@ -31,13 +31,14 @@ def handle(g,action,p,role,user):
 def overview(g):
     result=[]
     for a in visible(g):
-        d=public(a); d['contributions']=[]; d['events']=[]; d['history']=[]; d['roster']=[]
+        d=public(a); d['contributions']=[]; d['full_contributions']=[]; d['events']=[]; d['history']=[]; d['roster']=[]
         if d['status']=='active':
             for gid in d['guilds']:
                 partner=Guild.objects.get(pk=gid)
                 d['events'].extend({'guild':partner.name,'id':e.key,**e.data} for e in rows(partner,'event') if e.data.get('alliance_share'))
                 d['history'].extend({'guild':partner.name,'id':w.key,**w.data} for w in rows(partner,'war') if w.data.get('alliance_included'))
                 d['roster'].extend({'guild':partner.name,'name':m.data['name'],'class':m.data.get('class','Unknown')} for m in rows(partner,'member') if m.data.get('active'))
+                d['full_contributions'].append({'guild':partner.name,**calculate(partner,alliance_only=True,exclude_exceptions=False)['totals']})
                 d['contributions'].append({'guild':partner.name,**calculate(partner,alliance_only=True)['totals']})
         d['kills']=sum(x['kills'] for x in d['contributions']); d['deaths']=sum(x['deaths'] for x in d['contributions']); d['kdr']=kdr(d['kills'],d['deaths']); result.append(d)
     return result

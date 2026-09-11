@@ -35,7 +35,7 @@ class Command(BaseCommand):
                     if not tier:
                         Access.objects.filter(guild=g,user=user).delete();raise ValueError('Your Discord roles do not grant access.')
                     Access.objects.update_or_create(guild=g,user=user,defaults={'role':tier})
-                    channel=g.config.get('channels',{}).get('gear' if command.startswith('gear') else 'bot')
+                    channel=g.config.get('channels',{}).get('gear' if command in ['gear','gearupdate','gearlist','gearping','deletegear'] else 'bot')
                     if channel and str(channel)!=str(interaction.channel_id):raise ValueError('Use the configured command channel.')
                     return execute(user,g.pk,'commands','run',{'command':command,'arguments':json.loads(arguments)})
                 try:result=await run();content=json.dumps(result,indent=2,ensure_ascii=False)
@@ -64,7 +64,7 @@ class Command(BaseCommand):
             pieces=name.split(' ',1)
             if len(pieces)==2:
                 if pieces[0] not in groups:
-                    groups[pieces[0]]=app_commands.Group(name=pieces[0],description='Guild Observatory '+pieces[0]);bot.tree.add_command(groups[pieces[0]])
+                    groups[pieces[0]]=app_commands.Group(name=pieces[0],description='OpenIQ '+pieces[0]);bot.tree.add_command(groups[pieces[0]])
                 groups[pieces[0]].add_command(app_commands.Command(name=pieces[1],description='Run '+name,callback=make_callback(name)))
             else:bot.tree.add_command(app_commands.Command(name=name,description='Run '+name,callback=make_callback(name)))
         if options['check']:

@@ -10,7 +10,7 @@ from django.db import transaction
 from guilds.models import Guild,Access
 
 API='https://discord.com/api/v10'
-def credentials():return os.getenv('DISCORD_CLIENT_ID'),os.getenv('DISCORD_CLIENT_SECRET'),os.getenv('DISCORD_REDIRECT_URI','http://127.0.0.1:8000/auth/discord/callback/')
+def credentials():return os.getenv('DISCORD_CLIENT_ID'),os.getenv('DISCORD_CLIENT_SECRET'),os.getenv('DISCORD_REDIRECT_URI','http://127.0.0.1:8765/auth/discord/callback/')
 def begin(request):
     client,secret,uri=credentials()
     if not client or not secret:return HttpResponseBadRequest('Discord login is not configured. Use a local account for the prototype.')
