@@ -7,7 +7,7 @@ An independent, local CritIQ feature prototype for Black Desert guilds. Django +
 ## Run on Ubuntu Desktop
 
 ```bash
-cd /home/user/src/critiq-rebuild
+cd /home/user/src/openiq
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.lock
 .venv/bin/python manage.py migrate
