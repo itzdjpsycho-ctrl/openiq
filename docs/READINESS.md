@@ -137,6 +137,9 @@ verification and the choice of a public host remain external launch checks.
 - [ ] **UX-01 — Complete settings forms (reserved for UX contributor).** Replace remaining raw nested settings
   edits with validated forms for roles, channels, tickets, recruitment, schedules,
   capture, retention, and integrations.
+  - [x] **UX-01a: Editable schedule forms.** Show weekly/sync summaries, load
+    existing settings, use weekday names, validate hour/timezone input, and
+    preserve unrelated settings. Browser regression verifies save and recovery.
 - [ ] **UX-02 — Setup and integration status (reserved for UX contributor).** Show Discord bot, OAuth, Twitch,
   capture, scheduler, backup, and delivery status with actionable diagnostics.
 - [ ] **UX-03 — Empty/error/loading states (reserved for UX contributor).** Make every dashboard section usable

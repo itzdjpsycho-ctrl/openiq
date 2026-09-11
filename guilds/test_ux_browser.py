@@ -66,3 +66,47 @@ class DashboardUXTests(StaticLiveServerTestCase):
                 self.assertFalse(errors)
             finally:
                 browser.close()
+
+    def test_edit_saved_schedules(self):
+        from playwright.sync_api import sync_playwright
+
+        user = User.objects.create_user('schedule-ux')
+        guild = Guild.objects.create(name='Schedule UX', config={
+            'weekly': {'enabled': True, 'weekday': 4, 'hour': 18, 'timezone': 'Australia/Sydney', 'channel': '123', 'extra': 'preserved'},
+            'sync': {'enabled': False, 'weekday': 1, 'hour': 3, 'timezone': 'UTC', 'channel': 'preview', 'url': 'https://example.com/roster'},
+        })
+        Access.objects.create(user=user, guild=guild, role='owner')
+        self.client.force_login(user)
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(channel='msedge', headless=True)
+            try:
+                page = browser.new_page(viewport={'width': 390, 'height': 844})
+                page.context.add_cookies([{'name': 'sessionid', 'value': self.client.cookies['sessionid'].value, 'url': self.live_server_url}])
+                page.goto(self.live_server_url)
+                page.get_by_role('button', name='Settings', exact=True).click()
+                page.get_by_role('button', name='Edit weekly summary schedule').click()
+                self.assertEqual(page.get_by_label('Weekday', exact=True).input_value(), 'Friday')
+                self.assertEqual(page.get_by_label('Hour (0-23)', exact=True).input_value(), '18')
+                page.get_by_label('Hour (0-23)', exact=True).fill('24')
+                self.assertFalse(page.get_by_label('Hour (0-23)', exact=True).evaluate('(el) => el.checkValidity()'))
+                page.get_by_label('Hour (0-23)', exact=True).fill('19')
+                page.get_by_label('Timezone', exact=True).fill('Invalid/Zone')
+                page.get_by_role('button', name='Save', exact=True).click()
+                page.wait_for_function("document.querySelector('#form-error').textContent === 'Invalid timezone'")
+                self.assertEqual(page.get_by_label('Hour (0-23)', exact=True).input_value(), '19')
+                saved = page.evaluate("async () => (await (await fetch('/api/' + state.guild.id + '/state/')).json()).guild.config")
+                self.assertEqual(saved['weekly']['hour'], 18)
+                page.get_by_label('Timezone', exact=True).fill('UTC')
+                page.get_by_role('button', name='Save', exact=True).click()
+                page.wait_for_function("!document.querySelector('#dialog').open")
+                saved = page.evaluate("async () => (await (await fetch('/api/' + state.guild.id + '/state/')).json()).guild.config")
+                self.assertEqual(saved['weekly']['hour'], 19)
+                self.assertEqual(saved['weekly']['extra'], 'preserved')
+                self.assertEqual(saved['sync']['url'], 'https://example.com/roster')
+                page.get_by_role('button', name='Edit roster sync schedule').click()
+                self.assertEqual(page.get_by_label('Weekday', exact=True).input_value(), 'Tuesday')
+                self.assertEqual(page.get_by_label('Hour (0-23)', exact=True).input_value(), '3')
+                self.assertFalse(page.get_by_label('Enabled', exact=True).is_checked())
+                self.assertTrue(page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            finally:
+                browser.close()
