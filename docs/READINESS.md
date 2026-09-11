@@ -22,7 +22,7 @@ verification and the choice of a public host remain external launch checks.
 - [x] **AUTH-03 — Verified Discord guild onboarding.** Persist the OAuth guild
   claims in the server-side session and allow creation only for a Discord server
   where the user is owner, administrator, or has Manage Guild.
-- [ ] **AUTH-04 — Secure OAuth lifecycle.** Handle denied authorization, missing
+- [x] **AUTH-04 — Secure OAuth lifecycle.** Handle denied authorization, missing
   refresh tokens, account reuse, logout/session cleanup, and safe refresh failure
   messages without exposing credentials.
 - [ ] **AUTH-05 — First-run setup screen (reserved for UX contributor).** Let an authorized Discord owner select

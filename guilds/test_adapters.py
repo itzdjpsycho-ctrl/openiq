@@ -43,6 +43,7 @@ class AdapterTests(TestCase):
     def test_oauth_begin_success_callback_and_replay_rejection(self):
         token=Mock();token.json.return_value={'access_token':'test','refresh_token':'refresh','expires_in':3600}
         profile=Mock();profile.json.return_value={'id':'123'}
+        User.objects.create_user('discord_123',password='must-be-disabled')
         with patch.dict(os.environ,{'DISCORD_CLIENT_ID':'id','DISCORD_CLIENT_SECRET':'secret'}):
             result=self.client.get('/auth/discord/');self.assertEqual(result.status_code,302)
             state=self.client.session['oauth_state']['value']
@@ -53,6 +54,17 @@ class AdapterTests(TestCase):
                 self.assertFalse(User.objects.get(username='discord_123').has_usable_password())
                 self.assertEqual(self.client.session['discord_guilds'],guilds)
             self.assertEqual(self.client.get('/auth/discord/callback/',{'state':state,'code':'code'}).status_code,400)
+    def test_oauth_denial_malformed_state_and_logout_cleanup(self):
+        session=self.client.session;session['oauth_state']={'value':'test','at':time.time()};session.save()
+        response=self.client.get('/auth/discord/callback/',{'state':'test','error':'access_denied'})
+        self.assertEqual(response.status_code,400);self.assertContains(response,'authorization was denied',status_code=400)
+        session=self.client.session;session['oauth_state']={'value':123,'at':'invalid'};session.save()
+        self.assertEqual(self.client.get('/auth/discord/callback/',{'state':'123'}).status_code,400)
+        user=User.objects.create_user('discord_logout');self.client.force_login(user)
+        session=self.client.session;session['discord_tokens']={'access':'secret','expires':time.time()+3600};session['discord_checked']=time.time();session.save()
+        self.assertEqual(self.client.get('/logout/').status_code,405)
+        self.assertEqual(self.client.post('/logout/').status_code,302)
+        self.assertNotIn('discord_tokens',self.client.session)
     def test_oauth_remote_failure_does_not_authenticate(self):
         session=self.client.session;session['oauth_state']={'value':'test','at':time.time()};session.save()
         with patch('httpx.post',side_effect=httpx.ConnectError('offline')):
@@ -101,6 +113,11 @@ class AdapterTests(TestCase):
         with patch('httpx.post',return_value=response),patch('guilds.discord_auth.synchronize',return_value=[]) as sync:
             self.assertEqual(self.client.get('/').status_code,200);sync.assert_called_once_with(user,'new')
         self.assertEqual(self.client.session['discord_tokens']['access'],'new')
+    def test_expired_token_without_refresh_logs_out(self):
+        user=User.objects.create_user('discord_expired');self.client.force_login(user)
+        session=self.client.session;session['discord_tokens']={'access':'old','expires':0};session['discord_checked']=0;session.save()
+        self.assertEqual(self.client.get('/').status_code,302)
+        self.assertNotIn('_auth_user_id',self.client.session)
     def test_discord_unconfigured_and_administrator_fallback(self):
         from .discord_auth import role_for
         with patch.dict(os.environ,{'DISCORD_CLIENT_ID':'','DISCORD_CLIENT_SECRET':''}):self.assertEqual(self.client.get('/auth/discord/').status_code,400)

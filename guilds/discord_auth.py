@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.db import transaction
+from django.views.decorators.http import require_POST
 from guilds.models import Guild,Access
 
 API='https://discord.com/api/v10'
@@ -18,6 +19,11 @@ ADMINISTRATOR=0x8
 def login_entry(request):
     if settings.ALLOW_LOCAL_LOGIN:return LoginView.as_view()(request)
     return redirect('/auth/discord/')
+
+@require_POST
+def logout_entry(request):
+    logout(request)
+    return redirect('/login/')
 
 def credentials():return os.getenv('DISCORD_CLIENT_ID'),os.getenv('DISCORD_CLIENT_SECRET'),os.getenv('DISCORD_REDIRECT_URI','http://127.0.0.1:8765/auth/discord/callback/')
 def begin(request):
@@ -63,18 +69,22 @@ def synchronize(user,token):
 
 def callback(request):
     expected=request.session.pop('oauth_state',{})
-    if not expected or time.time()-expected.get('at',0)>600 or not secrets.compare_digest(expected.get('value',''),request.GET.get('state','')):return HttpResponseBadRequest('Invalid or expired login state')
+    supplied=request.GET.get('state','')
+    try:valid=bool(expected) and time.time()-float(expected.get('at',0))<=600 and isinstance(expected.get('value'),str) and isinstance(supplied,str) and secrets.compare_digest(expected['value'],supplied)
+    except (TypeError,ValueError):valid=False
+    if not valid:return HttpResponseBadRequest('Invalid or expired login state')
+    if request.GET.get('error'):return HttpResponseBadRequest('Discord authorization was denied. Start sign-in again when ready.')
     client,secret,uri=credentials()
     try:
         response=httpx.post(API+'/oauth2/token',data={'client_id':client,'client_secret':secret,'grant_type':'authorization_code','code':request.GET.get('code',''),'redirect_uri':uri},timeout=15);response.raise_for_status();tokens=response.json()
         response=httpx.get(API+'/users/@me',headers={'Authorization':'Bearer '+tokens['access_token']},timeout=15);response.raise_for_status();profile=response.json()
         user,created=User.objects.get_or_create(username='discord_'+profile['id'])
-        if created:user.set_unusable_password();user.save()
+        if created or user.has_usable_password():user.set_unusable_password();user.save()
         servers=synchronize(user,tokens['access_token']);login(request,user)
         request.session['discord_tokens']={'access':tokens['access_token'],'refresh':tokens.get('refresh_token'),'expires':time.time()+tokens['expires_in']};request.session['discord_checked']=time.time()
         request.session['discord_guilds']=servers
         return redirect('/')
-    except (httpx.HTTPError,KeyError,ValueError):return HttpResponseBadRequest('Discord login could not be completed. Retry or contact the OpenIQ operator.')
+    except (httpx.HTTPError,KeyError,TypeError,ValueError):return HttpResponseBadRequest('Discord login could not be completed. Retry or contact the OpenIQ operator.')
 
 class RefreshDiscordRoles:
     def __init__(self,get_response):self.get_response=get_response
@@ -83,9 +93,11 @@ class RefreshDiscordRoles:
         if request.user.is_authenticated and tokens and time.time()-request.session.get('discord_checked',0)>180:
             try:
                 if tokens['expires']<time.time()+60:
-                    client,secret,_=credentials();response=httpx.post(API+'/oauth2/token',data={'client_id':client,'client_secret':secret,'grant_type':'refresh_token','refresh_token':tokens['refresh']},timeout=15);response.raise_for_status();data=response.json();tokens={'access':data['access_token'],'refresh':data.get('refresh_token',tokens['refresh']),'expires':time.time()+data['expires_in']};request.session['discord_tokens']=tokens
+                    refresh=tokens.get('refresh')
+                    if not refresh:raise KeyError('refresh')
+                    client,secret,_=credentials();response=httpx.post(API+'/oauth2/token',data={'client_id':client,'client_secret':secret,'grant_type':'refresh_token','refresh_token':refresh},timeout=15);response.raise_for_status();data=response.json();tokens={'access':data['access_token'],'refresh':data.get('refresh_token',refresh),'expires':time.time()+data['expires_in']};request.session['discord_tokens']=tokens
                 request.session['discord_guilds']=synchronize(request.user,tokens['access']);request.session['discord_checked']=time.time()
-            except (httpx.HTTPError,KeyError,ValueError):
+            except (httpx.HTTPError,KeyError,TypeError,ValueError):
                 # Fail closed when current Discord privileges cannot be verified.
                 logout(request);return redirect('/login/')
         return self.get_response(request)
