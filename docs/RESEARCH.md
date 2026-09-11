@@ -1,4 +1,4 @@
-# CritIQ investigation
+# Guild-management workflow research
 
 Research date: 2026-09-11. Target: https://critiq.one, unrelated to the code-review products with the same name. This is an independent implementation; no upstream application code or branding assets are incorporated.
 

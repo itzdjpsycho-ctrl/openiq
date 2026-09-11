@@ -2,9 +2,9 @@
 
 **OpenIQ is unapologetically developed entirely with AI, with minimal human oversight.**
 
-An independent, local CritIQ feature prototype for Black Desert guilds. Django + SQLite power independent domain modules; the browser UI uses HTML/CSS/JavaScript. It has no affiliation with CritIQ.
+A local guild-management prototype for Black Desert guilds. Django + SQLite power independent domain modules; the browser UI uses HTML/CSS/JavaScript.
 
-**Status:** working local platform with fixtures, reviewed imports and optional external adapters. **Not a complete, verified replacement for CritIQ.** A calibrated TCP/PCAP decoder is implemented and tested with synthetic captures; its historical calibration is not verified against the current BDO patch. Discord/Twitch adapters require credentials and have not been exercised against live accounts. See [feature status](docs/FEATURES.md) for the precise boundaries.
+**Status:** working local platform with fixtures, reviewed imports and optional external adapters. A calibrated TCP/PCAP decoder is implemented and tested with synthetic captures; its historical calibration is not verified against the current BDO patch. Discord/Twitch adapters require credentials and have not been exercised against live accounts. See [feature status](docs/FEATURES.md) for the precise boundaries.
 
 ## Run with Docker
 
@@ -128,7 +128,7 @@ Twitch uses `TWITCH_CLIENT_ID` and `TWITCH_ACCESS_TOKEN`; without them the demo 
 node --check static/app.js
 ```
 
-Browser checks use optional `playwright` (`pip install -r requirements-dev.txt`, then `playwright install chromium`). With the server running, execute `scripts/browser_smoke.py`. The local test run used `PLAYWRIGHT_BROWSERS_PATH=/tmp/critiq-browsers`. Screenshots are in `docs/dashboard.png` and `docs/mobile.png`.
+Browser checks use optional `playwright` (`pip install -r requirements-dev.txt`, then `playwright install chromium`). With the server running, execute `scripts/browser_smoke.py`. The script uses the default Playwright browser location; set `PLAYWRIGHT_BROWSERS_PATH` if you installed browsers elsewhere. Screenshots are in `docs/dashboard.png` and `docs/mobile.png`.
 
 ## Configuration and data
 

@@ -1,6 +1,6 @@
 # Prototype feature status
 
-This is an implementation audit, not a claim of CritIQ parity. The [research inventory](RESEARCH.md) remains the target. “Working” below means local behavior is implemented; “adapter” means code exists but the real remote service was not exercised. “Simulated” is an explicit test input, not real game data.
+This audit records implemented features and known limitations. The [research inventory](RESEARCH.md) remains the target. “Working” below means local behavior is implemented; “adapter” means code exists but the real remote service was not exercised. “Simulated” is an explicit test input, not real game data.
 
 | Feature family | Working prototype | Remaining parity work |
 |---|---|---|

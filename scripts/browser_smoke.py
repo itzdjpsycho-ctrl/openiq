@@ -1,7 +1,6 @@
 """Exercise real browser workflows in an isolated, disposable local guild."""
 import os,uuid
 from playwright.sync_api import sync_playwright
-os.environ.setdefault('PLAYWRIGHT_BROWSERS_PATH','/tmp/critiq-browsers')
 base=os.getenv('OPENIQ_URL','http://127.0.0.1:8765')
 with sync_playwright() as p:
     browser=p.chromium.launch(headless=True,args=['--no-sandbox'])

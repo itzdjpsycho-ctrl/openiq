@@ -1,6 +1,6 @@
 """Independent decoder for the public IKUSA text record contract.
 
-Contract observed from CritIQ's publicly served log-import interface:
+Contract observed from the public log-import interface cited in docs/CONTRACTS.md:
 [HH:MM:SS] <local character> has killed|died to <enemy> from <guild>
 Optional suffix: (<local family>, <enemy family>).
 """
