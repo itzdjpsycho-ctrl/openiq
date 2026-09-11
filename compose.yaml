@@ -1,4 +1,13 @@
 name: openiq
+x-database: &database
+  DATABASE_BACKEND: "${DATABASE_BACKEND:-sqlite}"
+  DATABASE_PATH: "${DATABASE_PATH:-/data/db.sqlite3}"
+  DATABASE_NAME: "${DATABASE_NAME:-}"
+  DATABASE_USER: "${DATABASE_USER:-}"
+  DATABASE_PASSWORD: "${DATABASE_PASSWORD:-}"
+  DATABASE_HOST: "${DATABASE_HOST:-localhost}"
+  DATABASE_PORT: "${DATABASE_PORT:-5432}"
+  DATABASE_SSLMODE: "${DATABASE_SSLMODE:-prefer}"
 services:
   web:
     build: .
@@ -6,6 +15,7 @@ services:
     ports:
       - "${OPENIQ_BIND:-127.0.0.1}:${OPENIQ_PORT:-8765}:8000"
     environment:
+      <<: *database
       DEBUG: "0"
       ALLOW_LOCAL_LOGIN: "${ALLOW_LOCAL_LOGIN:-0}"
       HTTPS: "${HTTPS:-0}"
@@ -30,6 +40,7 @@ services:
     profiles: [jobs]
     command: [python, manage.py, scheduler]
     environment:
+      <<: *database
       RUN_MIGRATIONS: "0"
       SEED_DEMO: "0"
       RUN_BACKEND_ADMIN_SETUP: "0"
@@ -48,6 +59,7 @@ services:
     profiles: [discord]
     command: [python, manage.py, runbot]
     environment:
+      <<: *database
       RUN_MIGRATIONS: "0"
       SEED_DEMO: "0"
       RUN_BACKEND_ADMIN_SETUP: "0"

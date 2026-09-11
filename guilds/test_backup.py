@@ -35,10 +35,10 @@ class BackupTests(SimpleTestCase):
                     self.assertEqual((snapshot / name).stat().st_mode & 0o777, 0o600)
                 self.assertEqual(len([p for p in output.glob('openiq-backup-*') if not p.is_symlink()]), 1)
                 self.assertTrue((output / 'unrelated').exists())
-                with patch('guilds.management.commands.backup.time.monotonic', side_effect=[0, 999]), self.assertRaises(CommandError):
+                with patch('config.database.time.monotonic', side_effect=[0, 999]), self.assertRaises(CommandError):
                     call_command('backup', output=output, timeout=1)
                 self.assertFalse(list(output.glob('.openiq-backup-*')))
-                with patch('guilds.management.commands.backup.sqlite3.connect') as connect:
+                with patch('config.database.sqlite3.connect') as connect:
                     connect.return_value.execute.return_value.fetchall.return_value = [('corrupt',)]
                     with self.assertRaises(CommandError):call_command('backup', output=output)
 

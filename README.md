@@ -153,6 +153,11 @@ Browser checks use optional `playwright` (`pip install -r requirements-dev.txt`,
 
 ## Configuration and data
 
+Database settings and maintenance operations use a pluggable backend layer;
+domain queries use Django ORM. SQLite remains the supported default. See
+[database extension guide](docs/DATABASES.md) for adapter contracts, PostgreSQL
+configuration scaffolding, and the remaining PostgreSQL integration work.
+
 SQLite database: `db.sqlite3`; generated signing key: `.secret-key`. Both are excluded from Git. No credentials belong in source control.
 
 Create a consistent online backup without stopping the services:

@@ -12,7 +12,8 @@ def access(user,guild):
 
 @transaction.atomic
 def execute(user,guild_id,module,action,payload):
-    # A database write acquires SQLite's writer lock before reading mutable records.
+    # ORM UPDATE serializes mutations: SQLite takes its writer lock; PostgreSQL
+    # locks the guild row until this transaction ends. Read records afterward.
     role=access(user,guild_id)
     Guild.objects.filter(pk=guild_id).update(revision=F('revision')+1)
     g=Guild.objects.get(pk=guild_id)
