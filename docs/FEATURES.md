@@ -38,3 +38,5 @@ All major product areas have a usable local workflow or a clearly labeled adapte
 ## Test coverage
 
 Run `python -m coverage run manage.py test`, then `python -m coverage report` or `python -m coverage html`. Coverage excludes test code and generated migrations; uncovered application branches remain visible. Full coverage is an active goal, not a claim. Remote API tests use mocks; synthetic packet and browser tests do not establish upstream feature parity.
+
+The latest baseline is 112 passing Python tests with 100% statement and branch coverage for `guilds` and `config`, including management commands. `.coveragerc` enforces that threshold. This does not include JavaScript coverage, desktop Tk UI coverage, or live external-service validation. Recruitment now preserves structured questions/answers and exposes each applicant's own submissions; closed tickets reject further replies.

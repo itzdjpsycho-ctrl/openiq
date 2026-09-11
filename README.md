@@ -158,3 +158,24 @@ The local capture-release prototype can build and checksum-verify portable sourc
 These are local source releases, not a published Windows executable distribution. The installer validates archive paths and checksums and replaces the installed tree atomically. A remote release service would additionally need signed manifests and platform packaging.
 
 Optional AI text generation uses a local Ollama server when `OLLAMA_MODEL` is set, with `OLLAMA_URL` defaulting to `http://127.0.0.1:11434`. Without a model it clearly identifies its deterministic offline fallback.
+
+## Test coverage
+
+The Python application and management commands currently have **100% statement and branch coverage** across **112 tests**. Coverage excludes test files and generated migrations. The C tracer is selected explicitly because Python 3.14's default monitoring tracer reported false missing branches for compact exception paths.
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m coverage run manage.py test
+python -m coverage report
+python -m coverage html
+python scripts/browser_smoke.py
+```
+
+The coverage report fails below 100%. Browser smoke tests separately exercise all 12 dashboard sections and representative data-entry workflows against the running container. This is not a claim of 100% JavaScript coverage or live-service parity: Discord/Twitch/Ollama calls are mocked, and packet tests use synthetic captures.
+
+To build and inspect a portable capture source release locally:
+
+```bash
+python manage.py release_capture --release-version 0.1.0 --output /tmp/openiq-release
+python manage.py update_capture /tmp/openiq-release/manifest.json /tmp/openiq-capture --install
+```

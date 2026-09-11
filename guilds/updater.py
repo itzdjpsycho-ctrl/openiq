@@ -28,9 +28,12 @@ def install_release(manifest_path,destination):
         with zipfile.ZipFile(archive) as bundle:
             for entry in bundle.infolist():
                 path=PurePosixPath(entry.filename)
-                if path.is_absolute() or '..' in path.parts or '\\' in entry.filename or (entry.external_attr>>16)&0o170000==0o120000:raise ValueError('Unsafe release entry')
-                if entry.file_size>20*1024*1024:raise ValueError('Oversized release entry')
-            if sum(e.file_size for e in bundle.infolist())>100*1024*1024:raise ValueError('Release too large')
+                if path.is_absolute() or '..' in path.parts or '\\' in entry.filename or (entry.external_attr>>16)&0o170000==0o120000:
+                    raise ValueError('Unsafe release entry')
+                if entry.file_size>20*1024*1024:
+                    raise ValueError('Oversized release entry')
+            if sum(e.file_size for e in bundle.infolist())>100*1024*1024:
+                raise ValueError('Release too large')
             bundle.extractall(stage)
         (stage/'release.json').write_text(json.dumps({'version':release['version']}))
         backup=Path(tmp)/'previous'

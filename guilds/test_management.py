@@ -72,6 +72,20 @@ class ManagementTests(TestCase):
         self.assertEqual(interaction.followup.send.call_args.args[0],'Signup updated.')
         interaction.guild_id=999;async_to_sync(bot.on_interaction)(interaction)
         self.assertEqual(interaction.followup.send.call_args.args[0],'Wrong server')
+        interaction.guild_id=123
+        async_to_sync(command.callback)(interaction,arguments='invalid JSON')
+        self.assertIn('Expecting value',interaction.followup.send.call_args.args[0])
+        async_to_sync(command.callback)(interaction,guild_name='missing')
+        self.assertIn('Specify guild_name',interaction.followup.send.call_args.args[0])
+        self.g.config={'channels':{'bot':'999'}};self.g.save()
+        async_to_sync(command.callback)(interaction)
+        self.assertIn('configured command channel',interaction.followup.send.call_args.args[0])
+        interaction.guild.owner_id=999;interaction.user.guild_permissions.value=0
+        async_to_sync(command.callback)(interaction)
+        self.assertIn('do not grant access',interaction.followup.send.call_args.args[0])
+        async_to_sync(bot.on_interaction)(interaction)
+        self.assertEqual(interaction.followup.send.call_args.args[0],'No guild access')
+        interaction.data={'custom_id':'irrelevant'};async_to_sync(bot.on_interaction)(interaction)
         interaction.guild=None;async_to_sync(command.callback)(interaction)
         self.assertIn('server',interaction.response.send_message.call_args.args[0])
     def test_live_packet_selection_is_mocked_and_errors_are_reported(self):
@@ -84,3 +98,7 @@ class ManagementTests(TestCase):
             file=Path(temp)/'empty.jsonl';file.write_text('')
             with patch('guilds.management.commands.capture.time.sleep',side_effect=KeyboardInterrupt):
                 self.assertIn('Capture stopped',self.call('capture',str(file),session='unused',guild=self.g.pk,user='cli'))
+
+    def test_offline_packet_command_stdout_contract(self):
+        output=self.call('packet_capture',calibration=str(ROOT/'fixtures/calibration-historical.json'),pcap=str(ROOT/'fixtures/combat-synthetic.pcap'))
+        self.assertEqual([json.loads(line)['kind'] for line in output.splitlines()],['kill','death'])

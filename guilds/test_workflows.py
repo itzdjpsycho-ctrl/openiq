@@ -352,3 +352,32 @@ class WorkflowTests(TestCase):
     def test_unlinked_setclass_and_future_command_guard(self):
         with self.assertRaises(Invalid):self.act('commands','run',{'command':'setclass','arguments':{'class':'Shai'}})
         with patch('guilds.modules.commands.COMMANDS',['future-command']),self.assertRaises(Invalid):self.act('commands','run',{'command':'future-command'})
+    def test_miscellaneous_read_and_preview_boundaries(self):
+        from .delivery import deliver
+        from .discord_components import process
+        self.assertEqual(str(self.g),'Test')
+        with patch.dict(os.environ,{'ENABLE_DISCORD_DELIVERY':'1','DISCORD_BOT_TOKEN':'test'}),self.assertRaises(Invalid):deliver(Outbox.objects.create(guild=self.g,key='bad',channel='preview'),True)
+        with self.assertRaises(Invalid):process(self.member,'unknown')
+        with self.assertRaises(Invalid):self.act('integrations','streams_fixture',{'streams':{}})
+        self.client.force_login(self.member)
+        self.assertEqual(self.client.get('/events/shared/00000000-0000-0000-0000-000000000000/').status_code,404)
+        self.assertEqual(self.client.post('/recover/',data='{}',content_type='application/json').status_code,400)
+        self.act('coaching','lead',{'name':'Private','capacity':1})
+        self.assertNotIn('lead',self.client.get(f'/api/{self.g.pk}/state/').json()['records'])
+        self.assertEqual(self.client.post('/onboard/',data='{}',content_type='application/json').status_code,400)
+    def test_exception_totals_and_unrelated_assignment(self):
+        from .modules.analytics import calculate
+        from .modules.coaching import flags
+        m=self.roster();n=self.roster('Beta');self.act('roster','save',{'id':m,'exception':True})
+        self.act('wars','save',{'participants':[{'member':m,'kills':10,'deaths':1},{'member':n,'kills':0,'deaths':10}]})
+        self.assertEqual(calculate(self.g)['totals']['kills'],0)
+        lead=self.act('coaching','lead',{'name':'Lead','capacity':1});self.act('coaching','assign',{'member':m,'lead':lead['id']})
+        self.assertEqual(flags(self.g)[0]['id'],n)
+    def test_existing_recurrence_and_disjoint_alliance(self):
+        other=Guild.objects.create(name='Other');partner=Guild.objects.create(name='Partner');fourth=Guild.objects.create(name='Fourth')
+        Access.objects.create(guild=other,user=self.owner,role='owner')
+        execute(self.owner,other.pk,'alliances','create',{'name':'Separate','partners':[partner.pk]})
+        self.act('alliances','create',{'name':'Ours','partners':[fourth.pk]})
+        e=self.event(recurrence_days=7);self.act('events','next',{'event':e['id']})
+        self.act('operations','tick',{'at':'2026-09-02T00:00:00Z'})
+        self.assertEqual(Record.objects.filter(kind='event').count(),2)

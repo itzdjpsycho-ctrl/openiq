@@ -75,7 +75,8 @@ def onboard(request):
         p=json.loads(request.body)
         with transaction.atomic():
             name=text(p['name'],'guild name',80)
-            if Guild.objects.filter(name__iexact=name).exists():raise Invalid('That guild already exists')
+            if Guild.objects.filter(name__iexact=name).exists():
+                raise Invalid('That guild already exists')
             g=Guild.objects.create(name=name,region=text(p.get('region','NA'),'region',12),server_id=str(p.get('server_id','')))
             Access.objects.create(guild=g,user=request.user,role='owner')
             if p.get('names'):execute(request.user,g.pk,'roster','sync',{'names':p['names']})
@@ -109,7 +110,8 @@ def recover(request):
             Guild.objects.filter(pk=g.pk).update(revision=F('revision')+1)
             key=Record.objects.filter(guild=g,kind='adoption',key='current').first()
             digest=hashlib.sha256(str(p['key']).encode()).hexdigest()
-            if not key or key.data['used'] or key.data.get('expires','')<now() or not secrets.compare_digest(key.data.get('token_hash',''),digest):raise Invalid('Invalid or expired adoption key')
+            if not key or key.data['used'] or key.data.get('expires','')<now() or not secrets.compare_digest(key.data.get('token_hash',''),digest):
+                raise Invalid('Invalid or expired adoption key')
             g.server_id=text(p['server_id'],'Discord server ID',30);g.save()
             key.data['used']=True;key.save()
             Access.objects.update_or_create(guild=g,user=request.user,defaults={'role':'owner'})

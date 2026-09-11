@@ -43,3 +43,34 @@ class ValidationTests(SimpleTestCase):
         from config.wsgi import application as wsgi
         from config.asgi import application as asgi
         self.assertTrue(callable(wsgi));self.assertTrue(callable(asgi))
+    def test_settings_key_persistence_and_https_configuration(self):
+        import runpy
+        root=Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as temp,patch.dict(os.environ,{'OPENIQ_DATA_DIR':temp,'SECRET_KEY':'','DEBUG':'0','HTTPS':'1','TRUST_PROXY':'1'}):
+            first=runpy.run_path(str(root/'config/settings.py'));second=runpy.run_path(str(root/'config/settings.py'))
+            self.assertEqual(first['SECRET_KEY'],second['SECRET_KEY'])
+            self.assertEqual((Path(temp)/'.secret-key').stat().st_mode&0o777,0o600)
+            self.assertTrue(first['SECURE_SSL_REDIRECT']);self.assertEqual(first['SECURE_PROXY_SSL_HEADER'],('HTTP_X_FORWARDED_PROTO','https'))
+    def test_empty_capture_lines_and_invalid_choice(self):
+        from .capture import JsonLineTail
+        from .modules.core import choice
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/'log';path.write_text('\n {}\n\n');self.assertEqual(len(JsonLineTail(path).read()),1)
+        with self.assertRaises(Invalid):choice('bad',['allowed'],'kind')
+    def test_release_rejects_external_archives_symlinks_and_size_limits(self):
+        from .updater import inspect_release
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);manifest=root/'manifest.json';archive=root/'bundle.zip'
+            manifest.write_text(json.dumps({'version':'1.0.0','archive':'../external.zip','sha256':'unused'}))
+            with self.assertRaises(ValueError):inspect_release(manifest,root/'install')
+            for mode in ['symlink','entry_size','total_size']:
+                with self.subTest(mode=mode):
+                    with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED) as bundle:
+                        if mode=='symlink':
+                            entry=zipfile.ZipInfo('link');entry.external_attr=0o120777<<16;bundle.writestr(entry,'target')
+                        elif mode=='entry_size':bundle.writestr('huge',bytes(21*1024*1024))
+                        else:
+                            for index in range(6):bundle.writestr(str(index),bytes(18*1024*1024))
+                    manifest.write_text(json.dumps({'version':'1.0.0','archive':'bundle.zip','sha256':hashlib.sha256(archive.read_bytes()).hexdigest()}))
+                    with self.assertRaises(ValueError):install_release(manifest,root/'install')
+                    self.assertFalse((root/'install').exists())

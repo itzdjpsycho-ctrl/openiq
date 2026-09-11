@@ -72,3 +72,11 @@ class AdapterTests(TestCase):
         with patch('httpx.post',return_value=response),patch('guilds.discord_auth.synchronize') as sync:
             self.assertEqual(self.client.get('/').status_code,200);sync.assert_called_once_with(user,'new')
         self.assertEqual(self.client.session['discord_tokens']['access'],'new')
+    def test_discord_unconfigured_and_administrator_fallback(self):
+        from .discord_auth import role_for
+        with patch.dict(os.environ,{'DISCORD_CLIENT_ID':'','DISCORD_CLIENT_SECRET':''}):self.assertEqual(self.client.get('/auth/discord/').status_code,400)
+        self.assertEqual(role_for(Guild(name='Blank'),{'permissions':'8'},[]),'owner')
+    def test_ocr_headers_and_image_pixel_limit(self):
+        from .modules.integrations import paired_scores
+        self.assertEqual(paired_scores(['Names\nAlpha','Kills Deaths\n\n10 2'])[0]['kills'],10)
+        with patch('PIL.Image.open',return_value=Mock(width=5000,height=5000)),self.assertRaises(Invalid):ocr(b'image')
