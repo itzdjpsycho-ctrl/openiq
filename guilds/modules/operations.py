@@ -18,6 +18,11 @@ def handle(g,action,p,role,user):
         if challenge.data['status']!='pending':raise Invalid('Challenge already completed')
         other=secrets.randbelow(100)+1;mine=challenge.data['roll']
         challenge.data.update(opponent_roll=other,status='complete',winner=challenge.data['challenger'] if mine>other else challenge.data['opponent'] if other>mine else 'Draw');challenge.save();return public(challenge)
+    if action=='welcome_role':
+        member=owner_or_self(g,role,user,p['member']);allowed=g.config.get('welcome',{}).get('roles',['Raider','Social']);selected=choice(p['role'],allowed,'welcome role')
+        member.data.setdefault('community_roles',[])
+        if selected not in member.data['community_roles']:member.data['community_roles'].append(selected)
+        member.save();return public(member)
     require(role)
     if action=='schedule':
         require(role,'owner');kind=choice(p['kind'],['weekly','sync'],'schedule')
@@ -67,9 +72,4 @@ def handle(g,action,p,role,user):
         return public(save(g,'recruitment_form',{'title':text(p['title']),'questions':[text(q,'question',500) for q in questions],'channel':str(p.get('channel','preview'))},p.get('id')))
     if action=='ticket_category':
         require(role,'owner');return public(save(g,'ticket_category',{'name':text(p['name']),'staff_role':str(p.get('staff_role',''))},p.get('id')))
-    if action=='welcome_role':
-        member=get(g,'member',p['member']);allowed=g.config.get('welcome',{}).get('roles',['Raider','Social']);selected=choice(p['role'],allowed,'welcome role')
-        member.data.setdefault('community_roles',[])
-        if selected not in member.data['community_roles']:member.data['community_roles'].append(selected)
-        member.save();return public(member)
     raise Invalid('Unknown operations action')

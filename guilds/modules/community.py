@@ -46,7 +46,14 @@ def handle(g,action,p,role,user):
         a=get(g,'application',p['application']); a.data.update(status=choice(p['status'],['accepted','rejected'],'status'),review=text(p['review'],maximum=3000),reviewer=user.username); a.save(); return public(a)
     if action=='close_ticket':
         t=get(g,'ticket',p['ticket']); t.data['status']='closed'; t.save(); return public(t)
-    if action=='welcome': return preview(g,ident(),f"Welcome {text(p['name'])}! {p.get('message','Choose a role and introduce yourself.')}")
+    if action=='welcome':
+        member=get(g,'member',p['member']) if p.get('member') else None
+        name=member.data['name'] if member else text(p['name'])
+        result=preview(g,'welcome:'+member.key if member else ident(),f"Welcome {name}! {p.get('message','Choose a role and introduce yourself.')}",g.config.get('channels',{}).get('welcome','preview'))
+        if member:
+            from guilds.discord_welcome import components
+            save(g,'message_components',{'components':components(g,member)},str(result['id']))
+        return result
     if action=='weekly':
         from datetime import timedelta
         cutoff=(datetime.now(timezone.utc)-timedelta(days=7)).date().isoformat(); wars=[w for w in rows(g,'war') if cutoff<=w.data['date']<=now()[:10]]

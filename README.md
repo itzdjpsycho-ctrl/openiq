@@ -161,7 +161,7 @@ Optional AI text generation uses a local Ollama server when `OLLAMA_MODEL` is se
 
 ## Test coverage
 
-The Python application and management commands currently have **100% statement and branch coverage** across **116 tests**. Coverage excludes test files and generated migrations. The C tracer is selected explicitly because Python 3.14's default monitoring tracer reported false missing branches for compact exception paths.
+The Python application and management commands currently have **100% statement and branch coverage** across **119 tests**. Coverage excludes test files and generated migrations. The C tracer is selected explicitly because Python 3.14's default monitoring tracer reported false missing branches for compact exception paths.
 
 ```bash
 python -m pip install -r requirements-dev.txt
@@ -190,3 +190,6 @@ python manage.py ticket_channel TICKET_ID --guild GUILD_ID --user demo
 ```
 
 The command previews by default. Adding `--send` requires `ENABLE_DISCORD_DELIVERY=1` and `DISCORD_BOT_TOKEN`; it creates or updates a private channel, synchronizes transcript messages, and makes closed tickets read-only for their author. The bot needs the corresponding Discord channel/message permissions. Remote behavior is tested with mocks only. HTTP success followed by a local database failure can still require manual reconciliation.
+
+
+Welcome cards support native Discord role buttons. Set `welcome.roles` to allowed labels (for example `["Raider", "Social"]`) and `welcome.role_ids` to the corresponding Discord role IDs. Preview a welcome card for a linked member, then use the existing opt-in outbox delivery command to post it. The bot processes button selections only for the intended member or an officer; local role selection remains available without Discord. Role-grant requests are idempotent, and HTTP failures do not mark the local role as granted.

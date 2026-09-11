@@ -45,7 +45,7 @@ class Command(BaseCommand):
         @bot.event
         async def on_interaction(interaction):
             custom_id=(interaction.data or {}).get('custom_id','')
-            if not custom_id.startswith('signup:'):return
+            if not custom_id.startswith(('signup:','welcome:')):return
             await interaction.response.defer(ephemeral=True)
             @sync_to_async
             def apply_component():
@@ -56,8 +56,8 @@ class Command(BaseCommand):
                 tier=role_for(g,{'owner':interaction.guild.owner_id==interaction.user.id,'permissions':str(interaction.user.guild_permissions.value)},[r.id for r in interaction.user.roles])
                 if not tier:Access.objects.filter(guild=g,user=user).delete();raise ValueError('No guild access')
                 Access.objects.update_or_create(guild=g,user=user,defaults={'role':tier})
-                process(user,custom_id)
-            try:await apply_component();text='Signup updated.'
+                process(user,custom_id,deliver_roles=True)
+            try:await apply_component();text='Welcome role updated.' if custom_id.startswith('welcome:') else 'Signup updated.'
             except Exception as exc:text=str(exc)
             await interaction.followup.send(text[:1900],ephemeral=True,allowed_mentions=discord.AllowedMentions.none())
         for name in COMMANDS:

@@ -9,10 +9,14 @@ def event_components(g,event):
     buttons.append({'type':2,'style':2,'label':'Withdraw','custom_id':f'signup:{g.pk}:{event.key}:withdraw'})
     return [{'type':1,'components':buttons[i:i+5]} for i in range(0,len(buttons),5)]
 
-def process(user,custom_id):
+def process(user,custom_id,deliver_roles=False):
     fields=custom_id.split(':')
-    if len(fields)!=4 or fields[0]!='signup':raise Invalid('Unknown component')
-    _,gid,key,index=fields;g=Guild.objects.get(pk=gid);access(user,g);member=own_member(g,user)
+    if len(fields)!=4 or fields[0] not in ['signup','welcome']:raise Invalid('Unknown component')
+    kind,gid,key,index=fields;g=Guild.objects.get(pk=gid);access(user,g)
+    if kind=='welcome':
+        from .discord_welcome import choose
+        return choose(user,g,key,index,enabled=deliver_roles)
+    member=own_member(g,user)
     if not member:raise Invalid('Ask an officer to link your account first')
     event=Record.objects.get(guild=g,kind='event',key=key)
     try:

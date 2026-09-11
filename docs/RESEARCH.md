@@ -68,3 +68,5 @@ A deeper search located [sch-28/ikusa_logger](https://github.com/sch-28/ikusa_lo
 ### Private ticket channel adapter
 
 OpenIQ independently builds private-channel permission overwrites, transcript updates, and read-only closure using the [official Discord guild-channel API](https://docs.discord.com/developers/resources/guild#create-guild-channel). The adapter is opt-in and tested with mocked responses; no live server writes have been performed.
+
+Welcome role buttons use the [official Add Guild Member Role API](https://docs.discord.com/developers/resources/guild#add-guild-member-role) through an explicit delivery gate. Local selections and mocked role-grant requests are independently tested.
