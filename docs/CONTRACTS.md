@@ -37,7 +37,7 @@ A JSON array or newline-delimited objects:
 
 ## IKUSA text contract
 
-The public CritIQ log-import frontend revealed this interoperable text shape:
+The public log-import frontend documented in the [research inventory](RESEARCH.md) provided this interoperable text shape:
 
 ```text
 [23:59:58] LocalCharacter has killed EnemyCharacter from EnemyGuild (LocalFamily, EnemyFamily)
@@ -46,7 +46,7 @@ The public CritIQ log-import frontend revealed this interoperable text shape:
 
 The independently written parser takes an explicit date and timezone offset. It reverses actor/victim for `died to`, and recognizes a greater-than-12-hour backwards clock jump as midnight. Smaller out-of-order clock changes are rejected for review. IDs are derived from date, line position and text; importing arbitrary overlapping subsets is not guaranteed to deduplicate the same way as importing the complete same file.
 
-Only the text format was used as compatibility evidence from the publicly served `ikusaParser` asset. No upstream implementation is bundled. Synthetic contract fixtures are provided; authentic game-log verification remains pending. See [IKUSA introduction](https://ikusa.site/docs/introduction) and [CritIQ documentation](https://critiq.one/docs/index.html).
+Only the text format was used as compatibility evidence from the publicly served `ikusaParser` asset. No upstream implementation is bundled. Synthetic contract fixtures are provided; authentic game-log verification remains pending. See [IKUSA introduction](https://ikusa.site/docs/introduction) and [Source product documentation](https://critiq.one/docs/index.html).
 
 ## External adapters
 

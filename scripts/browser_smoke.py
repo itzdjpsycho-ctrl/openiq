@@ -1,7 +1,6 @@
 import os,uuid
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-os.environ.setdefault('PLAYWRIGHT_BROWSERS_PATH','/tmp/critiq-browsers')
 with sync_playwright() as p:
     browser=p.chromium.launch(headless=True,args=['--no-sandbox'])
     page=browser.new_page(viewport={'width':1440,'height':1000})
