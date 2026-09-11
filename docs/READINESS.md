@@ -140,6 +140,9 @@ verification and the choice of a public host remain external launch checks.
   - [x] **UX-01a: Editable schedule forms.** Show weekly/sync summaries, load
     existing settings, use weekday names, validate hour/timezone input, and
     preserve unrelated settings. Browser regression verifies save and recovery.
+  - [x] **UX-01b: Application forms and ticket categories.** List, create, and
+    edit saved questions, channels, names, and staff roles with validated forms
+    and empty states. Browser checks cover correction, updates, and persistence.
 - [ ] **UX-02 — Setup and integration status (reserved for UX contributor).** Show Discord bot, OAuth, Twitch,
   capture, scheduler, backup, and delivery status with actionable diagnostics.
 - [ ] **UX-03 — Empty/error/loading states (reserved for UX contributor).** Make every dashboard section usable
