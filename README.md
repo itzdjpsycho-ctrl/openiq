@@ -1,21 +1,58 @@
-# Guild Observatory
+# OpenIQ
+
+**OpenIQ is unapologetically developed entirely with AI, with minimal human oversight.**
 
 An independent, local CritIQ feature prototype for Black Desert guilds. Django + SQLite power independent domain modules; the browser UI uses HTML/CSS/JavaScript. It has no affiliation with CritIQ.
 
-**Status:** working local platform with fixtures, reviewed imports and optional external adapters. **Not a complete, verified replacement for CritIQ.** In particular, native BDO packet decoding is not implemented. Discord/Twitch adapters require credentials and have not been exercised against live accounts. See [feature status](docs/FEATURES.md) for the precise boundaries.
+**Status:** working local platform with fixtures, reviewed imports and optional external adapters. **Not a complete, verified replacement for CritIQ.** A calibrated TCP/PCAP decoder is implemented and tested with synthetic captures; its historical calibration is not verified against the current BDO patch. Discord/Twitch adapters require credentials and have not been exercised against live accounts. See [feature status](docs/FEATURES.md) for the precise boundaries.
+
+## Run with Docker
+
+```bash
+cd /home/user/src/openiq
+docker compose up --build -d
+```
+
+Open **http://127.0.0.1:8765/** and sign in with `demo` / `prototype-local-2026`. Compose initializes demo data only when missing. The `openiq-data` named volume persists the database and signing key across container replacement. Existing host demo data is not copied into the image or container.
+
+```bash
+# Inspect status and logs.
+docker compose ps
+docker compose logs --tail=100 web
+
+# Enable the optional continuous scheduler (notifications remain previews).
+docker compose --profile jobs up -d
+
+# Stop containers while retaining data.
+docker compose down
+```
+
+For Docker without Compose:
+
+```bash
+docker build -t openiq:local .
+docker run -d --name openiq -p 127.0.0.1:8765:8000 \
+  -v openiq-data:/data -e SEED_DEMO=1 openiq:local
+```
+
+The application runs as UID 10001, includes Tesseract and uses Gunicorn/WhiteNoise to serve the app and static assets. It does not require a host Python installation. `.dockerignore` excludes the host database, signing key, environment files, Git metadata, virtual environment and screenshots.
+
+Copy `.env.example` to `.env` to customize the port and initial demo password. `SEED_DEMO=0` disables demo initialization. For an empty installation, run `docker compose exec web python manage.py createsuperuser`, grant that account normal guild access through New guild, then add other accounts as needed. `HTTPS=1` enables secure cookies and HTTPS redirects when deployed behind TLS; set `TRUST_PROXY=1` only for a trusted reverse proxy that controls forwarded headers.
+
+The Docker container hosts the platform. The desktop/live-interface capture process remains on the game host; offline PCAP parsing can also run in the image. No privileged container or host-network mode is required for the dashboard.
 
 ## Run on Ubuntu Desktop
 
 ```bash
-cd /home/user/src/critiq-rebuild
+cd /home/user/src/openiq
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.lock
 .venv/bin/python manage.py migrate
 .venv/bin/python manage.py seed_demo
-.venv/bin/python manage.py runserver 127.0.0.1:8000 --noreload
+.venv/bin/python manage.py runserver 127.0.0.1:8765 --noreload
 ```
 
-Open **http://127.0.0.1:8000/**. Demo accounts:
+Open **http://127.0.0.1:8765/**. Demo accounts:
 
 | Username | Role | Default password |
 |---|---|---|
@@ -74,7 +111,7 @@ No Discord messages have been sent. No bot has been connected.
 .venv/bin/python scripts/capture_desktop.py
 ```
 
-Discord OAuth needs `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, and `DISCORD_REDIRECT_URI` (default `http://127.0.0.1:8000/auth/discord/callback/`). Configure guild `server_id` and role IDs. User OAuth requests profile, guild-list and own guild-membership read scopes. Role refresh fails closed. Local accounts are independent of Discord.
+Discord OAuth needs `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, and `DISCORD_REDIRECT_URI` (default `http://127.0.0.1:8765/auth/discord/callback/`). Configure guild `server_id` and role IDs. User OAuth requests profile, guild-list and own guild-membership read scopes. Role refresh fails closed. Local accounts are independent of Discord.
 
 The optional bot uses `DISCORD_BOT_TOKEN` and requires `ENABLE_DISCORD_DELIVERY=1` before it will connect. `runbot --sync` registers the command tree. Its prototype slash interface accepts an `arguments` JSON object and optional `guild_name`; the dashboard offers the friendlier forms. `deliver ID` only previews an outbox item; `deliver ID --send` also requires delivery enablement and a numeric target channel. This code has not been live-tested. Do not enable it until you intend to connect/send.
 
@@ -87,6 +124,7 @@ Twitch uses `TWITCH_CLIENT_ID` and `TWITCH_ACCESS_TOKEN`; without them the demo 
 .venv/bin/python manage.py check
 .venv/bin/python manage.py runbot --check
 .venv/bin/python scripts/verify_ocr.py
+.venv/bin/python scripts/verify_packets.py
 node --check static/app.js
 ```
 
@@ -97,3 +135,26 @@ Browser checks use optional `playwright` (`pip install -r requirements-dev.txt`,
 SQLite database: `db.sqlite3`; generated signing key: `.secret-key`. Both are excluded from Git. No credentials belong in source control. Back up the database while the application is stopped. The server uses `DEBUG=1` by default for local development; production configuration, deployment hardening, integration load testing, retention policy and recovery drills remain separate work.
 
 Research and independent behavior decisions: [investigation](docs/RESEARCH.md), [feature matrix](docs/FEATURES.md), [data contract](docs/CONTRACTS.md).
+
+## Calibrated packet capture
+
+The decoder is independently implemented from the public IKUSA field-calibration contract. The bundled offsets are **historical (2023-04-19)** and use a documentation-only server network. They are suitable for the synthetic fixture, not an assertion of current game compatibility.
+
+```bash
+.venv/bin/python manage.py packet_capture \
+  --calibration fixtures/calibration-historical.json \
+  --pcap fixtures/combat-synthetic.pcap
+```
+
+For an actual game session, supply a verified current calibration and explicit server network/interface selection. `packet_capture --interfaces INTERFACE --calibration FILE --session SESSION_ID` provides live capture through Scapy; Windows uses Npcap, while Linux requires capture permission. Live traffic has not been captured during development.
+
+The local capture-release prototype can build and checksum-verify portable source packages:
+
+```bash
+.venv/bin/python manage.py release_capture --output /tmp/openiq-release
+.venv/bin/python manage.py update_capture /tmp/openiq-release/manifest.json /tmp/openiq-capture-install --install
+```
+
+These are local source releases, not a published Windows executable distribution. The installer validates archive paths and checksums and replaces the installed tree atomically. A remote release service would additionally need signed manifests and platform packaging.
+
+Optional AI text generation uses a local Ollama server when `OLLAMA_MODEL` is set, with `OLLAMA_URL` defaulting to `http://127.0.0.1:11434`. Without a model it clearly identifies its deterministic offline fallback.
