@@ -63,8 +63,6 @@ class ManagementTests(TestCase):
         with patch.dict('os.environ',{'DISCORD_BOT_TOKEN':'test','ENABLE_DISCORD_DELIVERY':'1'}),patch('discord.Client.run',autospec=True) as connect:
             self.call('runbot',sync=True)
         bot=connect.call_args.args[0]
-        with patch.object(bot.tree,'sync',new_callable=AsyncMock) as sync:
-            async_to_sync(bot.setup_hook)();sync.assert_awaited_once()
         interaction=Mock();interaction.guild_id=123;interaction.channel_id=456;interaction.guild.owner_id=7;interaction.user.id=7;interaction.user.roles=[];interaction.user.guild_permissions.value=8
         interaction.response.defer=AsyncMock();interaction.response.send_message=AsyncMock();interaction.followup.send=AsyncMock()
         command=bot.tree.get_command('guildstats')
@@ -95,6 +93,31 @@ class ManagementTests(TestCase):
         interaction.data={'custom_id':'irrelevant'};async_to_sync(bot.on_interaction)(interaction)
         interaction.guild=None;async_to_sync(command.callback)(interaction)
         self.assertIn('server',interaction.response.send_message.call_args.args[0])
+    def test_bot_supports_guild_scoped_sync_and_validates_sync_mode(self):
+        from unittest.mock import AsyncMock
+        from asgiref.sync import async_to_sync
+        with patch.dict('os.environ',{'DISCORD_BOT_TOKEN':'test','ENABLE_DISCORD_DELIVERY':'1','DISCORD_SYNC_GLOBAL':'0','DISCORD_SYNC_GUILD':''}),patch('discord.Client.run',autospec=True) as connect:
+            self.call('runbot',sync_guild=123)
+        bot=connect.call_args.args[0]
+        sync=AsyncMock(return_value=[]);bot.tree.sync=sync
+        with patch.object(bot.tree,'copy_global_to') as copy:
+            import asyncio
+            asyncio.run(bot.setup_hook())
+            self.assertEqual(copy.call_args.kwargs['guild'].id,123);self.assertEqual(sync.call_args.kwargs['guild'].id,123)
+        with patch.dict('os.environ',{'DISCORD_BOT_TOKEN':'test','ENABLE_DISCORD_DELIVERY':'1','DISCORD_SYNC_GLOBAL':'0','DISCORD_SYNC_GUILD':''}),patch('discord.Client.run',autospec=True) as connect:
+            self.call('runbot',sync=True)
+        global_bot=connect.call_args.args[0];global_sync=AsyncMock(return_value=[]);global_bot.tree.sync=global_sync
+        asyncio.run(global_bot.setup_hook());global_sync.assert_awaited_once_with()
+        import discord
+        global_bot.tree.sync=AsyncMock(side_effect=discord.HTTPException(Mock(status=403,reason='Forbidden'),'denied'))
+        with self.assertRaisesMessage(CommandError,'Discord command sync failed'):asyncio.run(global_bot.setup_hook())
+        with patch.dict('os.environ',{'DISCORD_BOT_TOKEN':'test','ENABLE_DISCORD_DELIVERY':'1','DISCORD_SYNC_GLOBAL':'0','DISCORD_SYNC_GUILD':''}),patch('discord.Client.run',autospec=True) as connect:
+            self.call('runbot')
+        idle_bot=connect.call_args.args[0];idle_bot.tree.sync=AsyncMock()
+        asyncio.run(idle_bot.setup_hook());idle_bot.tree.sync.assert_not_called()
+        with patch.dict('os.environ',{'DISCORD_SYNC_GLOBAL':'1','DISCORD_SYNC_GUILD':'123'}),self.assertRaises(CommandError):self.call('runbot',check=True)
+        with patch.dict('os.environ',{'DISCORD_SYNC_GLOBAL':'0','DISCORD_SYNC_GUILD':'invalid'}),self.assertRaises(CommandError):self.call('runbot',check=True)
+        with patch.dict('os.environ',{'DISCORD_SYNC_GLOBAL':'0','DISCORD_SYNC_GUILD':''}),self.assertRaises(CommandError):self.call('runbot',sync_guild=-1,check=True)
     def test_live_packet_selection_is_mocked_and_errors_are_reported(self):
         with patch('scapy.sendrecv.sniff') as sniff:
             self.call('packet_capture',calibration=str(ROOT/'fixtures/calibration-historical.json'),interfaces=['test0'],seconds=1)

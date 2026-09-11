@@ -12,6 +12,11 @@ verification and the choice of a public host remain external launch checks.
 
 ## 1. Identity and initial setup
 
+Progress reviewed on 2026-09-12: AUTH-01–04, BOT-01–02, and WAR-01–04
+are implemented. PR #3's completed UX subtasks are recorded below; their parent
+tasks remain open. Command sync is validated with mocked Discord responses;
+live installation checks remain outstanding.
+
 - [x] **AUTH-01 — Rotating backend recovery administrator.** Compose enables one
   Django admin account, rotates its generated password on every web start, prints
   it to the web log, and can disable the account through configuration.
@@ -36,7 +41,7 @@ verification and the choice of a public host remain external launch checks.
 - [x] **BOT-01 — Compose bot service and secrets.** Add a long-running bot service
   with shared persistent data, health/restart behavior, Discord environment
   wiring, and an explicit switch controlling outbound delivery.
-- [ ] **BOT-02 — Development-guild command sync.** Support fast guild-scoped sync
+- [x] **BOT-02 — Development-guild command sync.** Support fast guild-scoped sync
   as well as global sync, document both modes, and report sync failures clearly.
 - [ ] **BOT-03 — Native slash-command options.** Replace the generic JSON argument
   box with typed Discord inputs, choices, autocomplete where useful, and command
@@ -133,6 +138,13 @@ verification and the choice of a public host remain external launch checks.
   guild-member export, unlink, anonymization, and deletion workflows.
 
 ## 6. Product completion and operator experience
+
+UX reconciliation (2026-09-12): merged PR #3 and the contributor's published
+`ux/dashboard-feedback` branch both end at `4dff36d`. No newer UX PR or branch
+commit is published. UX-01a/b/c, UX-03a, and UX-04a/c are complete and verified
+with three browser regressions. The unchecked parent items below retain their
+remaining scope; AUTH-05 and all remaining UX work stay reserved for that
+contributor.
 
 - [ ] **UX-01 — Complete settings forms (reserved for UX contributor).** Replace remaining raw nested settings
   edits with validated forms for roles, channels, tickets, recruitment, schedules,

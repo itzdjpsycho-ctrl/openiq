@@ -46,13 +46,15 @@ services:
   bot:
     image: openiq:local
     profiles: [discord]
-    command: [python, manage.py, runbot, --sync]
+    command: [python, manage.py, runbot]
     environment:
       RUN_MIGRATIONS: "0"
       SEED_DEMO: "0"
       RUN_BACKEND_ADMIN_SETUP: "0"
       DISCORD_BOT_TOKEN: "${DISCORD_BOT_TOKEN:-}"
       ENABLE_DISCORD_DELIVERY: "${ENABLE_DISCORD_DELIVERY:-0}"
+      DISCORD_SYNC_GLOBAL: "${DISCORD_SYNC_GLOBAL:-1}"
+      DISCORD_SYNC_GUILD: "${DISCORD_SYNC_GUILD:-}"
     volumes:
       - openiq-data:/data
     depends_on:

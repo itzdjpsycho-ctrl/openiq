@@ -128,7 +128,10 @@ Discord OAuth needs `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, and `DISCORD_R
 The bot runs as its own Compose service with the `discord` profile. Set
 `DISCORD_BOT_TOKEN` and `ENABLE_DISCORD_DELIVERY=1`, then start the profile. It
 shares the persistent data volume, waits for the web service to be healthy,
-registers the command tree, and restarts independently. `deliver ID` only
+registers the command tree, and restarts independently. The default
+`DISCORD_SYNC_GLOBAL=1` publishes global commands. For a staging server, set it
+to `0` and set `DISCORD_SYNC_GUILD` to the numeric server ID for immediate,
+guild-scoped updates. The two sync modes are mutually exclusive. `deliver ID` only
 previews an outbox item; `deliver ID --send` requires delivery enablement and a
 numeric target channel. Remote behavior is covered with controlled mocks but
 still needs the staging-guild launch check before a real guild depends on it.
