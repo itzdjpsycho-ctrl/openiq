@@ -74,6 +74,15 @@ with sync_playwright() as p:
         page.locator('#replay').fill('0')
         assert page.locator('#live-totals').inner_text().startswith('0 kills · 0 deaths')
         assert page.locator('#feed .feed').count()==0
+        page.locator('nav').get_by_role('button',name='History',exact=True).click()
+        page.get_by_role('button',name='Link signup event',exact=True).first.click()
+        page.locator('#dialog [data-field="event"]').select_option(label='UI test event')
+        page.get_by_role('button',name='Save',exact=True).click();page.wait_for_function('!document.querySelector("#dialog").open')
+        page.get_by_role('button',name='Link live session',exact=True).first.click()
+        page.locator('#dialog [data-field="session"]').select_option(label='UI test fight')
+        page.get_by_role('button',name='Save',exact=True).click();page.wait_for_function('!document.querySelector("#dialog").open')
+        assert page.locator('#panel').get_by_text('UI test event',exact=False).count()>0
+        assert page.locator('#panel').get_by_text('UI test fight (live)',exact=False).count()>0
         page.evaluate("""async()=>await call('integrations','streams_fixture',{streams:[
           {handle:'alpha_stream',title:'Node war',viewers:50,category:'Black Desert',partner:true},
           {handle:'beta_stream',title:'Variety night',viewers:10,category:'Variety',partner:false}
@@ -103,7 +112,7 @@ with sync_playwright() as p:
         parsed=page.evaluate("async()=>await parseIkusaText('[23:59:58] Alpha has killed Enemy from Rival\\n[00:00:02] Alpha died to Enemy from Rival','2026-09-11','+12:00')")
         assert len(parsed)==2 and parsed[1]['player']=='Enemy'
         assert not errors,errors
-        print('Browser passed: OpenIQ branding, 12 tabs, mobile layout, member search/create, war entry/inline edit, reviewed score finalization, analytics overlays, event creation, gear update, scoped live replay/debrief, stream filtering/player, settings preservation, ticket/welcome/access role configuration, browser IKUSA parsing, no JavaScript errors.')
+        print('Browser passed: OpenIQ branding, 12 tabs, mobile layout, member search/create, war entry/inline edit, reviewed score finalization, direct war/event/session linking, analytics overlays, event creation, gear update, scoped live replay/debrief, stream filtering/player, settings preservation, ticket/welcome/access role configuration, browser IKUSA parsing, no JavaScript errors.')
     except Exception:
         print('FORM ERROR:',page.locator('#form-error').inner_text())
         print('INVALID:',page.evaluate('Array.from(document.querySelectorAll("#action-form :invalid")).map(e=>({tag:e.tagName,type:e.type,value:e.value,message:e.validationMessage}))'))
