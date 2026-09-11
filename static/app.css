@@ -4,4 +4,8 @@
 .event-image{width:100%;max-height:240px;object-fit:cover;border-radius:8px;margin-bottom:16px}.team-group{color:var(--accent,#78e1c4);font-weight:600;font-size:.8rem;margin:0 0 8px}
 .stream-player iframe{width:100%;aspect-ratio:16/9;min-height:300px;border:0;border-radius:8px;background:#080b0f}.stream-player .card-head{justify-content:space-between}.stream-player #stream-controls{display:flex;gap:6px;flex-wrap:wrap}.card-actions a{align-content:center;padding:5px 8px}
 
+/* Shared keyboard and empty-state feedback. */
+:where(button,a,select,input,textarea,[tabindex]):focus-visible{outline:2px solid var(--mint);outline-offset:3px}
 .table-empty{text-align:center;color:var(--muted);padding:28px 16px}
+#toast{max-width:min(500px,calc(100vw - 32px));overflow-wrap:anywhere}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

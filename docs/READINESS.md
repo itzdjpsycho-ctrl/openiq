@@ -147,6 +147,12 @@ verification and the choice of a public host remain external launch checks.
 - [ ] **UX-04 — Accessibility and mobile pass (reserved for UX contributor).** Verify keyboard operation, focus,
   labels, contrast, reduced motion, narrow layouts, and screen-reader announcements
   for dynamic workflows.
+  First pass adds named guild/action selectors and dialogs, current-section
+  semantics, keyboard focus retention in navigation, visible focus outlines,
+  reduced-motion styles, and narrow-screen toast sizing. An opt-in Edge test
+  (`OPENIQ_BROWSER_TEST=1 python manage.py test guilds.test_ux_browser`) verifies
+  empty history at 390px, keyboard navigation, and failed-save correction.
+  Full section-by-section accessibility and mobile verification remains open.
 - [ ] **UX-05 — Guild-cluster boundaries (reserved for UX contributor).** Test two BDO guilds on one Discord
   server and allied guilds in separate servers without data or permission leakage.
 - [ ] **DOC-01 — Production runbook.** Document Discord application creation, OAuth
