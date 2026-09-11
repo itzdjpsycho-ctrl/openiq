@@ -22,7 +22,12 @@ def handle(g,action,p,role,user):
     if action=='stop': s.data.update(status='saved',ended=now())
     elif action=='share': s.data.update(public=bool(p.get('public')),share_token=s.data.get('share_token') or ident())
     elif action=='link':
-        w=get(g,'war',p['war']); w.data['session']=s.key; w.save(); s.data['war']=w.key
+        w=get(g,'war',p['war'])
+        previous_war=Record.objects.filter(guild=g,kind='war',key=s.data.get('war')).first()
+        if previous_war and previous_war.data.get('session')==s.key:previous_war.data.pop('session');previous_war.save()
+        previous_session=Record.objects.filter(guild=g,kind='session',key=w.data.get('session')).first()
+        if previous_session and previous_session.data.get('war')==w.key:previous_session.data.pop('war');previous_session.save()
+        w.data['session']=s.key; w.save(); s.data['war']=w.key
     else: raise Invalid('Unknown live action')
     s.save(); return public(s)
 

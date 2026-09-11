@@ -26,6 +26,10 @@ class DomainTests(TestCase):
     def test_cross_guild_references_rejected(self):
         other=Guild.objects.create(name='Other');Record.objects.create(guild=other,kind='member',key='foreign',data={'name':'Other'})
         with self.assertRaises(Invalid):self.war(participants=[{'member':'foreign','kills':2,'deaths':1}])
+    def test_war_context_survives_partial_edits(self):
+        war=self.war(location='Calpheon Castle',opponents='Iron Vow, Moonfall',capped=True,cap='Tier 2 · 550 GS')
+        edited=self.run_action('wars','save',{'id':war['id'],'note':'Reviewed','participants':war['participants']})
+        self.assertEqual((edited['location'],edited['opponents'],edited['cap']),('Calpheon Castle','Iron Vow, Moonfall','Tier 2 · 550 GS'))
     def test_import_review_and_idempotence(self):
         d=self.run_action('wars','review',{'csv':'name,kills,deaths\nAlpha,10,2\nBeto,8,1'})
         self.assertEqual(d['rows'][0]['member'],self.m);self.assertEqual(d['rows'][1]['member'],'')

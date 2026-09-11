@@ -13,7 +13,7 @@ ACTIONS=[
  a('roster','merge','Merge renamed member',[f('source','Old member','member'),f('target','Keep member','member')]),
  a('roster','remove','Mark inactive',[MEM]),
  a('wars','review','Review scores',[f('csv','Scores (CSV: name,kills,deaths)','textarea',default='name,kills,deaths\n')]),
- a('wars','save','Record war',[f('date','War date','date'),f('type','Type','select',['Node','Siege']),f('result','Result','select',['Win','Loss','Draw']),f('capped','Capped','checkbox'),f('participants','Participants','participants'),f('note','Note','textarea')]),
+ a('wars','save','Record war',[f('date','War date','date'),f('type','Type','select',['Node','Siege']),f('result','Result','select',['Win','Loss','Draw']),f('location','Node / castle'),f('opponents','Opposing guilds'),f('capped','Capped','checkbox'),f('cap','Cap details'),f('participants','Participants','participants'),f('note','Note','textarea')]),
  a('wars','delete','Delete war',[WAR]),
  a('events','save','Create event',[f('title','Title'),f('type','Type','select',['Node','Siege','Practice','Custom']),f('at','Start','datetime-local'),f('timezone','Timezone',default='Pacific/Auckland'),f('teams','Teams (name,capacity,optional group per line)','teams',default='Frontline,20\nFlex,10\nBackline,20'),f('recurrence_days','Repeat every N days (0 = once)','number',default=0),f('image','Card image URL (optional)','url'),f('accent','Accent color (optional)',default='')]),
  a('events','signup','Sign up / move team',[EVENT,MEM,f('team','Team name (empty to withdraw)')],'member'),

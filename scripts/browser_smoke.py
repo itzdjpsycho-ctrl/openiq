@@ -32,9 +32,11 @@ with sync_playwright() as p:
         page.get_by_placeholder('Search family name…').fill('')
         page.locator('nav').get_by_role('button',name='History',exact=True).click()
         page.locator('.actions-menu').select_option(label='Record war')
+        page.get_by_label('Node / castle',exact=True).fill('Calpheon Castle');page.get_by_label('Opposing guilds',exact=True).fill('Iron Vow');page.get_by_label('Capped',exact=True).check();page.get_by_label('Cap details',exact=True).fill('Tier 2 · 550 GS')
         page.get_by_label('Kills',exact=True).fill('20');page.get_by_label('Deaths',exact=True).fill('4');page.get_by_label('War class',exact=True).fill('Warrior')
         page.get_by_role('button',name='Save',exact=True).click();page.wait_for_function('!document.querySelector("#dialog").open || document.querySelector("#form-error").textContent');assert not page.locator('#dialog').is_visible(), page.locator('#form-error').inner_text()
         assert page.locator('#panel td').filter(has_text='20').count()>0
+        assert page.locator('#panel').get_by_text('Calpheon Castle',exact=False).count()>0
         page.get_by_role('button',name='Details',exact=True).click()
         page.locator('[data-detail-kills]').fill('24');page.get_by_role('button',name='Save row',exact=True).click()
         page.wait_for_function("state.records.war[0].participants[0].kills===24")

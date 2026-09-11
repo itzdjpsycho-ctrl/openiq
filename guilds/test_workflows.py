@@ -252,6 +252,14 @@ class WorkflowTests(TestCase):
         e=self.event();self.act('coaching','link_event',{'event':e['id'],'war':w['id']});self.act('live','link',{'session':s['id'],'war':w['id']})
         self.act('wars','delete',{'war':w['id']})
         self.assertNotIn('war',get(self.g,'event',e['id']).data);self.assertNotIn('war',get(self.g,'session',s['id']).data)
+    def test_live_relink_and_deleted_review_lifecycle(self):
+        m=self.roster();first=self.act('wars','save',{'participants':[{'member':m,'kills':1,'deaths':1}]});draft=self.act('wars','review',{'rows':[{'name':'Alpha','kills':2,'deaths':1}]})
+        second=self.act('wars','finalize',{'import':draft['id'],'participants':[{'member':m,'kills':2,'deaths':1}]})
+        old_session=self.act('live','start',{'title':'Old'});new_session=self.act('live','start',{'title':'New'})
+        self.act('live','link',{'session':old_session['id'],'war':first['id']});self.act('live','link',{'session':old_session['id'],'war':second['id']});self.assertNotIn('session',get(self.g,'war',first['id']).data)
+        self.act('live','link',{'session':new_session['id'],'war':second['id']});self.assertNotIn('war',get(self.g,'session',old_session['id']).data)
+        self.act('wars','delete',{'war':second['id']});deleted=get(self.g,'import',draft['id']).data
+        self.assertEqual(deleted['status'],'war_deleted');self.assertEqual(deleted['deleted_war'],second['id']);self.assertNotIn('war',get(self.g,'session',new_session['id']).data)
     def test_gear_rival_rankings_and_latest_record(self):
         from .modules.gear import rankings,current
         m=self.roster()
