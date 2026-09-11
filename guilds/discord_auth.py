@@ -1,0 +1,73 @@
+"""Discord authorization-code flow with server-side tokens and refreshed roles."""
+import os,secrets,time
+from urllib.parse import urlencode
+import httpx
+from django.contrib.auth import login,logout
+from django.contrib.auth.models import User
+from django.http import HttpResponseBadRequest
+from django.shortcuts import redirect
+from django.db import transaction
+from guilds.models import Guild,Access
+
+API='https://discord.com/api/v10'
+def credentials():return os.getenv('DISCORD_CLIENT_ID'),os.getenv('DISCORD_CLIENT_SECRET'),os.getenv('DISCORD_REDIRECT_URI','http://127.0.0.1:8000/auth/discord/callback/')
+def begin(request):
+    client,secret,uri=credentials()
+    if not client or not secret:return HttpResponseBadRequest('Discord login is not configured. Use a local account for the prototype.')
+    state=secrets.token_urlsafe(32);request.session['oauth_state']={'value':state,'at':time.time()}
+    return redirect('https://discord.com/oauth2/authorize?'+urlencode({'client_id':client,'redirect_uri':uri,'response_type':'code','scope':'identify guilds guilds.members.read','state':state}))
+
+def role_for(g,server,roles):
+    configured=g.config.get('roles',{})
+    if server.get('owner'):return 'owner'
+    for tier in ['owner','admin','member']:
+        allowed=configured.get(tier,[])
+        if isinstance(allowed,str):allowed=[allowed]
+        if set(map(str,allowed))&set(map(str,roles)):return tier
+    if not configured and int(server.get('permissions','0'))&8:return 'owner'
+    return None
+
+def synchronize(user,token):
+    headers={'Authorization':'Bearer '+token}
+    with httpx.Client(timeout=15) as client:
+        response=client.get(API+'/users/@me/guilds',headers=headers);response.raise_for_status();servers={str(s['id']):s for s in response.json()}
+        changes=[]
+        for g in Guild.objects.exclude(server_id=''):
+            server=servers.get(g.server_id);tier=None
+            if server:
+                response=client.get(API+f'/users/@me/guilds/{g.server_id}/member',headers=headers)
+                if response.status_code not in [403,404]:response.raise_for_status()
+                if response.status_code==200:tier=role_for(g,server,response.json().get('roles',[]))
+            changes.append((g,tier))
+    with transaction.atomic():
+        for g,tier in changes:
+            if tier:Access.objects.update_or_create(user=user,guild=g,defaults={'role':tier})
+            else:Access.objects.filter(user=user,guild=g).delete()
+
+def callback(request):
+    expected=request.session.pop('oauth_state',{})
+    if not expected or time.time()-expected.get('at',0)>600 or not secrets.compare_digest(expected.get('value',''),request.GET.get('state','')):return HttpResponseBadRequest('Invalid or expired login state')
+    client,secret,uri=credentials()
+    try:
+        response=httpx.post(API+'/oauth2/token',data={'client_id':client,'client_secret':secret,'grant_type':'authorization_code','code':request.GET.get('code',''),'redirect_uri':uri},timeout=15);response.raise_for_status();tokens=response.json()
+        response=httpx.get(API+'/users/@me',headers={'Authorization':'Bearer '+tokens['access_token']},timeout=15);response.raise_for_status();profile=response.json()
+        user,created=User.objects.get_or_create(username='discord_'+profile['id'])
+        if created:user.set_unusable_password();user.save()
+        synchronize(user,tokens['access_token']);login(request,user)
+        request.session['discord_tokens']={'access':tokens['access_token'],'refresh':tokens.get('refresh_token'),'expires':time.time()+tokens['expires_in']};request.session['discord_checked']=time.time()
+        return redirect('/')
+    except (httpx.HTTPError,KeyError,ValueError):return HttpResponseBadRequest('Discord login could not be completed. Retry or use a local account.')
+
+class RefreshDiscordRoles:
+    def __init__(self,get_response):self.get_response=get_response
+    def __call__(self,request):
+        tokens=request.session.get('discord_tokens')
+        if request.user.is_authenticated and tokens and time.time()-request.session.get('discord_checked',0)>180:
+            try:
+                if tokens['expires']<time.time()+60:
+                    client,secret,_=credentials();response=httpx.post(API+'/oauth2/token',data={'client_id':client,'client_secret':secret,'grant_type':'refresh_token','refresh_token':tokens['refresh']},timeout=15);response.raise_for_status();data=response.json();tokens={'access':data['access_token'],'refresh':data.get('refresh_token',tokens['refresh']),'expires':time.time()+data['expires_in']};request.session['discord_tokens']=tokens
+                synchronize(request.user,tokens['access']);request.session['discord_checked']=time.time()
+            except (httpx.HTTPError,KeyError,ValueError):
+                # Fail closed when current Discord privileges cannot be verified.
+                logout(request);return redirect('/login/')
+        return self.get_response(request)

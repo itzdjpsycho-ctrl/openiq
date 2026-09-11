@@ -1,0 +1,10 @@
+{
+  "patch": "2023-04-19; historical public IKUSA layout, not current verification",
+  "marker": "630100af12",
+  "record_bytes": 300,
+  "fields": {"guild": 6, "local": 201, "enemy": 263},
+  "name_bytes": 32,
+  "kill_nibble": 141,
+  "encoding": "utf-16-le",
+  "server_networks": ["203.0.113.0/24"]
+}

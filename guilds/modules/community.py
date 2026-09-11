@@ -1,0 +1,62 @@
+import random
+from .core import *
+from guilds.models import Outbox
+from .analytics import calculate
+
+def preview(g,key,content,channel='preview'):
+    obj,_=Outbox.objects.get_or_create(key=f'{g.pk}:{key}',defaults={'guild':g,'text':content,'channel':channel})
+    if obj.text!=content:
+        obj.text=content;obj.status='preview';obj.save()
+    return {'id':obj.pk,'text':obj.text,'status':obj.status}
+
+def handle(g,action,p,role,user):
+    if action=='reminder': return public(save(g,'reminder',{'user':user.pk,'text':text(p['text'],maximum=1500),'at':timestamp(p['at']),'status':'pending'}))
+    if action=='cancel_reminder':
+        r=get(g,'reminder',p['reminder'])
+        if r.data['user']!=user.pk: raise PermissionDenied()
+        r.data['status']='cancelled'; r.save(); return public(r)
+    if action=='ticket': return public(save(g,'ticket',{'user':user.pk,'category':text(p.get('category','General')),'subject':text(p['subject']),'text':text(p['text'],maximum=5000),'status':'open','replies':[]}))
+    if action=='reply':
+        r=get(g,'ticket',p['ticket'])
+        if role=='member' and r.data['user']!=user.pk: raise PermissionDenied()
+        r.data['replies'].append({'by':user.username,'text':text(p['text'],maximum=5000),'at':now()}); r.save(); return public(r)
+    if action=='apply': return public(save(g,'application',{'user':user.pk,'family':text(p['family']),'answers':text(p['answers'],maximum=5000),'status':'pending'}))
+    if action=='roll':
+        result={'user':user.username,'roll':random.SystemRandom().randint(1,100),'at':now()}; save(g,'roll',result); return result
+    if action=='tap':
+        r=save(g,'minigame',{'level':0,'fails':0},str(user.pk)) if not Record.objects.filter(guild=g,kind='minigame',key=str(user.pk)).exists() else get(g,'minigame',user.pk)
+        chance=max(0.05,0.8-r.data['level']*0.1)+min(r.data['fails']*0.01,0.15); success=random.SystemRandom().random()<chance
+        r.data['level']+=int(success); r.data['fails']=0 if success else r.data['fails']+1; r.save(); return {**public(r),'success':success,'chance':chance,'mode':'local minigame rules'}
+    if action=='summary_text':
+        content=text(p['text'],maximum=20000); sentences=content.replace('\n','. ').split('. '); return {'summary':'. '.join(sentences[:5]),'mode':'local extractive summary'}
+    if action=='roast':
+        m=owner_or_self(g,role,user,p['member']); s=next(x for x in calculate(g)['members'] if x['id']==m.key); return {'text':f"{m.data['name']} has {s['deaths']} deaths. At least the respawn button knows a loyal customer.",'mode':'local template'}
+    require(role)
+    if action=='review_application':
+        a=get(g,'application',p['application']); a.data.update(status=choice(p['status'],['accepted','rejected'],'status'),review=text(p['review'],maximum=3000),reviewer=user.username); a.save(); return public(a)
+    if action=='close_ticket':
+        t=get(g,'ticket',p['ticket']); t.data['status']='closed'; t.save(); return public(t)
+    if action=='welcome': return preview(g,ident(),f"Welcome {text(p['name'])}! {p.get('message','Choose a role and introduce yourself.')}")
+    if action=='weekly':
+        from datetime import timedelta
+        cutoff=(datetime.now(timezone.utc)-timedelta(days=7)).date().isoformat(); wars=[w for w in rows(g,'war') if cutoff<=w.data['date']<=now()[:10]]
+        return preview(g,ident(),f"{g.name}: {len(wars)} wars in the past seven days. "+' | '.join(w.data['date']+' '+w.data['result'] for w in wars))
+    if action in ['post_event','ping_missing']:
+        e=get(g,'event',p['event']); names={m.key:m.data['name'] for m in rows(g,'member')}; signed={s['member'] for s in e.data['signups']}
+        if action=='ping_missing': content='Awaiting response: '+', '.join(m.data['name'] for m in rows(g,'member') if m.data.get('active') and m.key not in signed)
+        else: content=e.data['title']+' — '+e.data['at']+'\n'+'\n'.join(t['name']+': '+', '.join(names.get(s['member'],'Unknown')+(' (waitlist)' if s.get('waitlisted') else '') for s in e.data['signups'] if s['team']==t['name']) for t in e.data['teams'])
+        result=preview(g,'event:'+e.key if action=='post_event' else ident(),content,g.config.get('channels',{}).get('events','preview'))
+        if action=='post_event':
+            from guilds.discord_components import event_components
+            save(g,'message_components',{'components':event_components(g,e)},str(result['id']))
+        return result
+    if action=='run_due':
+        delivered=0
+        for r in rows(g,'reminder'):
+            if r.data['status']=='pending' and r.data['at']<=now():
+                preview(g,'reminder:'+r.key,r.data['text']); r.data['status']='previewed'; r.save(); delivered+=1
+        for milestone in g.config.get('milestones',[100,1000]):
+            for s in calculate(g)['members']:
+                if s['kills']>=milestone: preview(g,f"milestone:{s['id']}:{milestone}",f"{s['name']} reached {milestone} kills!")
+        return {'reminders_processed':delivered}
+    raise Invalid('Unknown community action')
