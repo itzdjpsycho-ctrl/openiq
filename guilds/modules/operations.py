@@ -62,7 +62,9 @@ def handle(g,action,p,role,user):
                 save(g,'job',{'type':kind,'at':at.isoformat(),'status':status},key);count+=1
         return {'processed':count}
     if action=='recruitment_form':
-        require(role,'owner');return public(save(g,'recruitment_form',{'title':text(p['title']),'questions':p.get('questions',[]),'channel':str(p.get('channel','preview'))},p.get('id')))
+        require(role,'owner');questions=p.get('questions',[])
+        if not isinstance(questions,list) or not 1<=len(questions)<=20:raise Invalid('Supply 1–20 application questions')
+        return public(save(g,'recruitment_form',{'title':text(p['title']),'questions':[text(q,'question',500) for q in questions],'channel':str(p.get('channel','preview'))},p.get('id')))
     if action=='ticket_category':
         require(role,'owner');return public(save(g,'ticket_category',{'name':text(p['name']),'staff_role':str(p.get('staff_role',''))},p.get('id')))
     if action=='welcome_role':

@@ -19,10 +19,10 @@ def index(request):
 def state(request,guild_id):
     g=get_object_or_404(Guild,pk=guild_id); role=access(request.user,g)
     records={}
-    private={'lead','assignment','adoption','application','import'}
+    private={'lead','assignment','adoption','import'}
     for r in Record.objects.filter(guild=g).exclude(kind__in=['alliance','adoption']):
         if role=='member' and r.kind in private: continue
-        if r.kind in ['ticket','reminder','minigame'] and role=='member' and r.data.get('user',r.key)!=request.user.pk and str(r.data.get('user',r.key))!=str(request.user.pk): continue
+        if r.kind in ['ticket','application','reminder','minigame'] and role=='member' and r.data.get('user',r.key)!=request.user.pk and str(r.data.get('user',r.key))!=str(request.user.pk): continue
         d=public(r)
         if r.kind=='member' and role=='member': d.pop('notes',None)
         if r.kind=='challenge' and d.get('status')=='pending':d.pop('roll',None)

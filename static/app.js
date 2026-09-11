@@ -64,7 +64,7 @@ function enhanceTab(){
   const paused=records('lookup_status')[0];if(paused&&new Date(paused.paused_until)>new Date()){const n=document.createElement('p');n.className='notice';n.textContent='Class lookups paused until '+new Date(paused.paused_until).toLocaleTimeString();$('#panel').prepend(n);}
  }
  if(tab==='Community'){
-  for(const form of records('recruitment_form'))$('#toolbar').append(button(form.title,()=>openAction({label:form.title,fields:[{name:'family',label:'Family name',type:'text'},...form.questions.map((q,i)=>({name:'q'+i,label:q,type:'textarea'}))],custom:p=>call('community','apply',{family:p.family,answers:form.questions.map((q,i)=>q+'\n'+p['q'+i]).join('\n\n')})})));
+  for(const form of records('recruitment_form'))$('#toolbar').append(button(form.title,()=>openAction({label:form.title,fields:[{name:'family',label:'Family name',type:'text'},...form.questions.map((q,i)=>({name:'q'+i,label:q,type:'textarea'}))],custom:p=>call('community','apply',{family:p.family,form:form.id,responses:form.questions.map((q,i)=>p['q'+i]),answers:form.questions.map((q,i)=>q+'\n'+p['q'+i]).join('\n\n')})})));
  }
  if(tab==='Streams'){
   const filter=document.createElement('select');filter.setAttribute('aria-label','Stream category');filter.innerHTML='<option value="">All categories</option>'+[...new Set((records('streams')[0]?.items||[]).map(s=>s.category))].map(c=>`<option>${esc(c)}</option>`).join('');filter.onchange=()=>{const value=filter.value;document.querySelectorAll('#panel .card').forEach(c=>c.hidden=Boolean(value&&!c.textContent.includes(value)));};$('#toolbar').append(filter);

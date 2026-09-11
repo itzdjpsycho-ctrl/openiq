@@ -237,3 +237,118 @@ class WorkflowTests(TestCase):
         from django.db import DatabaseError
         self.assertEqual(self.client.get('/healthz/').status_code,200)
         with patch('guilds.views.Guild.objects.exists',side_effect=DatabaseError()):self.assertEqual(self.client.get('/healthz/').status_code,503)
+    def test_live_log_link_and_war_deletion_clear_related_references(self):
+        m=self.roster();s=self.act('live','start',{'title':'Fight'})
+        result=self.act('live','import_log',{'session':s['id'],'text':'[01:00:00] Alpha has killed Enemy from Rival','date':'2026-09-01'})
+        self.assertEqual(result['added'],1)
+        w=self.act('wars','save',{'date':'2026-09-01','participants':[{'member':m,'kills':1,'deaths':0}]})
+        e=self.event();self.act('coaching','link_event',{'event':e['id'],'war':w['id']});self.act('live','link',{'session':s['id'],'war':w['id']})
+        self.act('wars','delete',{'war':w['id']})
+        self.assertNotIn('war',get(self.g,'event',e['id']).data);self.assertNotIn('war',get(self.g,'session',s['id']).data)
+    def test_gear_rival_rankings_and_latest_record(self):
+        from .modules.gear import rankings,current
+        m=self.roster()
+        for ap in [300,310]:self.act('gear','save',{'member':m,'ap':ap,'aap':300,'dp':400})
+        self.act('gear','rival',{'name':'Rival','average_score':720,'members':10})
+        self.assertEqual(current(self.g)[0]['score'],710);self.assertEqual(rankings(self.g)[0]['name'],'Rival')
+    def test_local_fun_success_failure_and_summary(self):
+        m=self.roster()
+        for roll,success in [(0,True),(1,False)]:
+            with patch('random.SystemRandom.random',return_value=roll):self.assertEqual(self.act('community','tap',user=self.member)['success'],success)
+        self.assertEqual(self.act('community','summary_text',{'text':'First. Second.'})['summary'],'First. Second.')
+        self.assertIn('Alpha',self.act('community','roast',{'member':m})['text'])
+        self.act('community','welcome',{'name':'Alpha'})
+        self.act('community','weekly')
+        e=self.event();self.assertIn('Alpha',self.act('community','ping_missing',{'event':e['id']})['text'])
+    def test_review_cancel_and_unknown_action_errors(self):
+        draft=self.act('wars','review',{'csv':'name,kills,deaths\nAlpha,1,2'})
+        self.assertEqual(self.act('commands','run',{'command':'cancel'})['cancelled'],1)
+        with self.assertRaises(Invalid):self.act('wars','finalize',{'import':draft['id']})
+        for module in ['roster','wars','events','coaching','alliances','gear','live','intelligence','community','operations','admin','ai','integrations','commands']:
+            m=self.roster('Member'+module);s=self.act('live','start',{'title':'Session'})
+            with self.subTest(module=module),self.assertRaises(Invalid):self.act(module,'unknown',{'member':m,'session':s['id'],'alliance':'missing'})
+    def test_roster_source_preview_and_configured_command_sync(self):
+        html='<a href="/Adventure/Profile">Alpha</a>'
+        self.assertEqual(self.act('integrations','roster_preview',{'html':html})['names'],['Alpha'])
+        with self.assertRaises(Invalid):self.act('integrations','roster_preview',{'html':'No roster'})
+        with self.assertRaises(Invalid):self.act('commands','run',{'command':'sync roster'})
+        with patch('guilds.modules.integrations.fetch_roster',return_value=['Alpha']):
+            self.act('integrations','roster_source',{'url':'https://www.naeu.playblackdesert.com/Adventure/Guild'})
+            self.assertTrue(self.act('integrations','roster_fetch',{'url':'https://www.naeu.playblackdesert.com/Adventure/Guild'})['requires_confirmation'])
+            self.assertEqual(self.act('commands','run',{'command':'sync roster'})['added'],1)
+    def test_adoption_expiration_and_direct_adopt(self):
+        token=self.act('admin','adoption_key')['key']
+        with self.assertRaises(Invalid):self.act('admin','adopt',{'key':'wrong','server_id':'123'})
+        self.assertEqual(self.act('admin','adopt',{'key':token,'server_id':'123'})['server_id'],'123')
+        self.act('admin','adoption_key');record=get(self.g,'adoption','current');record.data['expires']='2000-01-01T00:00:00+00:00';record.save()
+        with self.assertRaises(Invalid):self.act('admin','adopt',{'key':token,'server_id':'123'})
+    def test_application_form_answers_and_applicant_visibility(self):
+        form=self.act('operations','recruitment_form',{'title':'Apply','questions':['Class?','Experience?']})
+        payload={'family':'Alpha','answers':'Shai, veteran','form':form['id'],'responses':['Shai','Veteran']}
+        own=self.act('community','apply',payload,self.member);self.act('community','apply',payload)
+        self.client.force_login(self.member)
+        applications=self.client.get(f'/api/{self.g.pk}/state/').json()['records']['application']
+        self.assertEqual([a['id'] for a in applications],[own['id']])
+        self.assertEqual(applications[0]['responses'],['Shai','Veteran'])
+        with self.assertRaises(Invalid):self.act('community','apply',{**payload,'responses':['Shai']},self.member)
+        for questions in [[], 'not a list', ['']]:
+            with self.subTest(questions=questions),self.assertRaises(Invalid):self.act('operations','recruitment_form',{'title':'Invalid','questions':questions})
+    def test_closed_ticket_rejects_replies(self):
+        ticket=self.act('community','ticket',{'subject':'Help','text':'Question'},self.member)
+        self.act('community','close_ticket',{'ticket':ticket['id']})
+        for user in [self.owner,self.member]:
+            with self.subTest(user=user.username),self.assertRaises(Invalid):self.act('community','reply',{'ticket':ticket['id'],'text':'Late reply'},user)
+        self.assertEqual(get(self.g,'ticket',ticket['id']).data['replies'],[])
+    def test_war_review_and_member_merge_edge_cases(self):
+        with self.assertRaises(Invalid):self.act('wars','review')
+        for payload in [{'rows':[]},{'rows':[{}]*1001}]:
+            with self.assertRaises(Invalid):self.act('wars','review',payload)
+        m=self.roster();n=self.roster('Beta')
+        for participants in [[],[{'member':m,'kills':1,'deaths':1}]*2]:
+            with self.assertRaises(Invalid):self.act('wars','save',{'participants':participants})
+        w=self.act('wars','save',{'date':'2026-09-01','participants':[{'member':n,'kills':5,'deaths':2}]})
+        e=self.event();self.act('events','signup',{'event':e['id'],'member':n,'team':'Front'})
+        with self.assertRaises(Invalid):self.act('roster','merge',{'source':m,'target':m})
+        self.act('roster','merge',{'source':n,'target':m})
+        self.assertEqual(get(self.g,'event',e['id']).data['signups'][0]['member'],m)
+        self.assertEqual(get(self.g,'war',w['id']).data['participants'][0]['member'],m)
+        from .modules.intelligence import extended
+        self.assertEqual(extended(self.g)['awards']['Single-war kills'],'Alpha')
+    def test_alliance_invalid_partners_and_busy_partner(self):
+        partner=Guild.objects.create(name='Partner');third=Guild.objects.create(name='Third')
+        for g in [partner,third]:Access.objects.create(guild=g,user=self.owner,role='owner')
+        for partners in [[],[self.g.pk],[999999]]:
+            with self.assertRaises(Invalid):self.act('alliances','create',{'name':'Invalid','partners':partners})
+        a=execute(self.owner,partner.pk,'alliances','create',{'name':'Busy','partners':[third.pk]})
+        with self.assertRaises(Invalid):self.act('alliances','create',{'name':'Conflict','partners':[partner.pk]})
+        with self.assertRaises(Invalid):execute(self.owner,partner.pk,'alliances','respond',{'alliance':a['id'],'response':'accepted'})
+        with self.assertRaises(Invalid):execute(self.owner,partner.pk,'alliances','unknown',{'alliance':a['id']})
+    def test_roster_link_vacation_and_schedule_validation(self):
+        m=self.roster();n=self.roster('Beta');self.act('roster','link',{'member':m,'user_id':self.member.pk})
+        with self.assertRaises(Invalid):self.act('roster','link',{'member':n,'user_id':self.member.pk})
+        with self.assertRaises(Invalid):self.act('roster','vacation',{'member':m,'start':'2026-09-02','end':'2026-09-01'})
+        with self.assertRaises(Invalid):self.act('operations','schedule',{'kind':'weekly','timezone':'Bad/Zone'})
+        with self.assertRaises(Invalid):self.act('operations','challenge',{'opponent':n})
+        with self.assertRaises(Invalid):self.act('operations','challenge',{'opponent':m},self.member)
+        s=self.act('live','start',{'title':'War'})
+        with self.assertRaises(Invalid):self.act('live','ingest',{'session':s['id'],'events':[{}]*2001})
+    def test_access_and_onboarding_denials(self):
+        from django.contrib.auth.models import AnonymousUser
+        from .services import access
+        outsider=User.objects.create_user('outsider')
+        for user in [AnonymousUser(),outsider]:
+            with self.assertRaises(PermissionDenied):access(user,self.g)
+        self.client.force_login(self.owner)
+        self.assertEqual(self.client.post('/onboard/',data='{"name":"Test"}',content_type='application/json').status_code,400)
+    def test_coaching_exemptions_and_disabled_rules(self):
+        from .modules.coaching import flags
+        from .modules.core import now
+        m=self.roster();self.act('roster','save',{'id':m,'exception':True})
+        self.assertEqual(flags(self.g),[])
+        self.act('roster','save',{'id':m,'exception':False,'joined':now()[:10]});self.assertEqual(flags(self.g),[])
+        self.act('roster','save',{'id':m,'joined':'2020-01-01'})
+        self.act('roster','vacation',{'member':m,'start':now()[:10],'end':'2099-01-01'});self.assertEqual(flags(self.g),[])
+        self.act('coaching','settings',{'enabled':False});self.g.refresh_from_db();self.assertEqual(flags(self.g),[])
+    def test_unlinked_setclass_and_future_command_guard(self):
+        with self.assertRaises(Invalid):self.act('commands','run',{'command':'setclass','arguments':{'class':'Shai'}})
+        with patch('guilds.modules.commands.COMMANDS',['future-command']),self.assertRaises(Invalid):self.act('commands','run',{'command':'future-command'})

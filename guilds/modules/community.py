@@ -19,8 +19,15 @@ def handle(g,action,p,role,user):
     if action=='reply':
         r=get(g,'ticket',p['ticket'])
         if role=='member' and r.data['user']!=user.pk: raise PermissionDenied()
+        if r.data['status']!='open':raise Invalid('This ticket is closed')
         r.data['replies'].append({'by':user.username,'text':text(p['text'],maximum=5000),'at':now()}); r.save(); return public(r)
-    if action=='apply': return public(save(g,'application',{'user':user.pk,'family':text(p['family']),'answers':text(p['answers'],maximum=5000),'status':'pending'}))
+    if action=='apply':
+        data={'user':user.pk,'family':text(p['family']),'answers':text(p['answers'],maximum=5000),'status':'pending'}
+        if p.get('form'):
+            form=get(g,'recruitment_form',p['form']);answers=p.get('responses')
+            if not isinstance(answers,list) or len(answers)!=len(form.data['questions']):raise Invalid('Answer every application question')
+            data.update(form=form.key,questions=form.data['questions'],responses=[text(answer,'answer',5000) for answer in answers])
+        return public(save(g,'application',data))
     if action=='roll':
         result={'user':user.username,'roll':random.SystemRandom().randint(1,100),'at':now()}; save(g,'roll',result); return result
     if action=='tap':

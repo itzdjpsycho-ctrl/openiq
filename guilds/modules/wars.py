@@ -39,5 +39,9 @@ def handle(g,action,p,role,user):
         data.update(date=date(p.get('date',old.get('date',now()[:10]))),type=choice(p.get('type',old.get('type','Node')),['Node','Siege'],'war type'),result=choice(p.get('result',old.get('result','Draw')),['Win','Loss','Draw'],'result'),capped=bool(p.get('capped',old.get('capped',False))),participants=participants(g,p.get('participants',old.get('participants'))))
         return public(save(g,'war',data,key))
     if action=='delete':
-        get(g,'war',p['war']).delete(); return {'deleted':p['war']}
+        war=get(g,'war',p['war'])
+        for kind in ['event','session']:
+            for record in rows(g,kind):
+                if record.data.get('war')==war.key:record.data.pop('war');record.save()
+        war.delete(); return {'deleted':p['war']}
     raise Invalid('Unknown war action')

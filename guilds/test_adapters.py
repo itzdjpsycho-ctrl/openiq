@@ -65,3 +65,10 @@ class AdapterTests(TestCase):
         with patch('guilds.discord_auth.synchronize',side_effect=httpx.ConnectError('offline')):
             response=self.client.get('/');self.assertEqual(response.status_code,302)
         self.assertNotIn('_auth_user_id',self.client.session)
+    def test_expired_token_refresh_success(self):
+        user=User.objects.create_user('discord_user');self.client.force_login(user)
+        session=self.client.session;session['discord_tokens']={'access':'old','refresh':'refresh','expires':0};session['discord_checked']=0;session.save()
+        response=Mock();response.json.return_value={'access_token':'new','expires_in':3600}
+        with patch('httpx.post',return_value=response),patch('guilds.discord_auth.synchronize') as sync:
+            self.assertEqual(self.client.get('/').status_code,200);sync.assert_called_once_with(user,'new')
+        self.assertEqual(self.client.session['discord_tokens']['access'],'new')
