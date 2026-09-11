@@ -2,3 +2,4 @@
 .participant{grid-template-columns:1.5fr .6fr .6fr 1fr 1fr 30px}.exclude-row{font-size:10px;display:flex;align-items:center;gap:5px}.participant input[type=checkbox]{width:auto}@media(max-width:760px){.participant{grid-template-columns:1fr 1fr}.participant select{grid-column:span 2}}
 
 .event-image{width:100%;max-height:240px;object-fit:cover;border-radius:8px;margin-bottom:16px}.team-group{color:var(--accent,#78e1c4);font-weight:600;font-size:.8rem;margin:0 0 8px}
+.stream-player iframe{width:100%;aspect-ratio:16/9;min-height:300px;border:0;border-radius:8px;background:#080b0f}.stream-player .card-head{justify-content:space-between}.stream-player #stream-controls{display:flex;gap:6px;flex-wrap:wrap}.card-actions a{align-content:center;padding:5px 8px}
