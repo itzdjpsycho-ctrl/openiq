@@ -141,6 +141,9 @@ verification and the choice of a public host remain external launch checks.
   capture, scheduler, backup, and delivery status with actionable diagnostics.
 - [ ] **UX-03 — Empty/error/loading states (reserved for UX contributor).** Make every dashboard section usable
   with no demo data and preserve entered values after validation failures.
+  Shared tables now explain empty results. Shared action forms show saving state,
+  prevent duplicate submission/dismissal while pending, retain values on failure,
+  and focus the error for correction. Section-specific states remain outstanding.
 - [ ] **UX-04 — Accessibility and mobile pass (reserved for UX contributor).** Verify keyboard operation, focus,
   labels, contrast, reduced motion, narrow layouts, and screen-reader announcements
   for dynamic workflows.
