@@ -153,7 +153,24 @@ Browser checks use optional `playwright` (`pip install -r requirements-dev.txt`,
 
 ## Configuration and data
 
-SQLite database: `db.sqlite3`; generated signing key: `.secret-key`. Both are excluded from Git. No credentials belong in source control. Back up the database while the application is stopped. The server uses `DEBUG=1` by default for local development; production configuration, deployment hardening, integration load testing, retention policy and recovery drills remain separate work.
+SQLite database: `db.sqlite3`; generated signing key: `.secret-key`. Both are excluded from Git. No credentials belong in source control.
+
+Create a consistent online backup without stopping the services:
+
+```bash
+python manage.py backup --output /path/to/private/backups --keep 7 --timeout 120
+# In Compose (copy snapshots off the data volume for disaster recovery):
+docker compose exec web python manage.py backup --output /data/backups --keep 7
+```
+
+Each timestamped snapshot includes `db.sqlite3`, the active `.secret-key`, and a
+SHA-256 manifest. The command validates SQLite integrity before publishing the
+snapshot and retains the newest requested count. Directories use mode 0700 and
+files use 0600. Backups contain private guild data and credentials; store them in
+an operator-controlled location outside Git and copy them off the application
+disk. External Discord/Twitch secrets supplied through environment variables
+need separate operator backups. Automated restore and scheduled backups remain
+tracked in the readiness checklist.
 
 Research and independent behavior decisions: [investigation](docs/RESEARCH.md), [feature matrix](docs/FEATURES.md), [data contract](docs/CONTRACTS.md).
 

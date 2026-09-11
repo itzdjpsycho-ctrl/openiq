@@ -96,7 +96,7 @@ live installation checks remain outstanding.
   optional environment variable through Compose, validate unsafe/missing values
   at startup, disable demo data by default, and provide a deployment-oriented
   example file without secrets.
-- [ ] **OPS-02 — Consistent backup command.** Create timestamped SQLite backups
+- [x] **OPS-02 — Consistent backup command.** Create timestamped SQLite backups
   using SQLite's online backup API, include the signing key and a manifest, and
   support a retention count without stopping the services.
 - [ ] **OPS-03 — Verified restore command.** Validate a backup manifest, refuse an
