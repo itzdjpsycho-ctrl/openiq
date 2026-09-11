@@ -163,7 +163,7 @@ verification and the choice of a public host remain external launch checks.
     selectors and dialogs, expose the current section, retain navigation focus,
     add visible focus outlines and reduced-motion styles, and constrain mobile
     toast sizing. Verify empty history at 390px, keyboard navigation, and
-    failed-save correction with the opt-in Edge browser regression test:
+    failed-save correction with the opt-in Chromium browser regression test (set `OPENIQ_BROWSER_CHANNEL=msedge` to use Edge):
     `OPENIQ_BROWSER_TEST=1 python manage.py test guilds.test_ux_browser`.
   - [x] **UX-04c: Roster search keyboard continuity.** Keep the search input
     focused while typing and name the search, sort, and class-filter controls.

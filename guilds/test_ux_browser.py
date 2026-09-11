@@ -20,7 +20,7 @@ class DashboardUXTests(StaticLiveServerTestCase):
         Access.objects.create(user=user, guild=guild, role='owner')
         self.client.force_login(user)
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(channel='msedge', headless=True)
+            browser = playwright.chromium.launch(channel=os.getenv('OPENIQ_BROWSER_CHANNEL') or None, headless=True)
             try:
                 page = browser.new_page(viewport={'width': 390, 'height': 844}, reduced_motion='reduce')
                 errors = []
@@ -85,7 +85,7 @@ class DashboardUXTests(StaticLiveServerTestCase):
         Access.objects.create(user=user, guild=guild, role='owner')
         self.client.force_login(user)
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(channel='msedge', headless=True)
+            browser = playwright.chromium.launch(channel=os.getenv('OPENIQ_BROWSER_CHANNEL') or None, headless=True)
             try:
                 page = browser.new_page(viewport={'width': 390, 'height': 844})
                 page.context.add_cookies([{'name': 'sessionid', 'value': self.client.cookies['sessionid'].value, 'url': self.live_server_url}])
@@ -126,7 +126,7 @@ class DashboardUXTests(StaticLiveServerTestCase):
         Access.objects.create(user=user, guild=guild, role='owner')
         self.client.force_login(user)
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(channel='msedge', headless=True)
+            browser = playwright.chromium.launch(channel=os.getenv('OPENIQ_BROWSER_CHANNEL') or None, headless=True)
             try:
                 page = browser.new_page(viewport={'width': 390, 'height': 844})
                 errors = []
