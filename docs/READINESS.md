@@ -143,6 +143,10 @@ verification and the choice of a public host remain external launch checks.
   - [x] **UX-01b: Application forms and ticket categories.** List, create, and
     edit saved questions, channels, names, and staff roles with validated forms
     and empty states. Browser checks cover correction, updates, and persistence.
+  - [x] **UX-01c: Channel destinations.** Show and edit bot, gear, welcome,
+    event, and coaching channels with ID validation, explicit blank defaults,
+    and preservation of unrelated settings. Browser regression covers saves
+    and validation recovery.
 - [ ] **UX-02 — Setup and integration status (reserved for UX contributor).** Show Discord bot, OAuth, Twitch,
   capture, scheduler, backup, and delivery status with actionable diagnostics.
 - [ ] **UX-03 — Empty/error/loading states (reserved for UX contributor).** Make every dashboard section usable

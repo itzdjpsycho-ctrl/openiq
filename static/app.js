@@ -63,7 +63,7 @@ function streams(){
  if(selected){const index=visible.indexOf(selected),controls=$('#stream-controls');controls.append(button('Previous',()=>{selectedStream=visible[(index-1+visible.length)%visible.length].handle;streams();}),button('Next',()=>{selectedStream=visible[(index+1)%visible.length].handle;streams();}),button('Close player',()=>{selectedStream='';streams();}));}
 }
 function community(){$('#panel').innerHTML=`<div class="split"><article class="card"><h3>Support tickets</h3>${records('ticket').map(t=>`<div class="section"><strong>${esc(t.subject)}</strong> <span class="badge">${esc(t.status)}</span><p>${esc(t.text)}</p>${t.replies.map(r=>`<p><strong>${esc(r.by)}</strong> ${esc(r.text)}</p>`).join('')}</div>`).join('')||'<p>No tickets.</p>'}</article><article class="card"><h3>Recruitment</h3>${records('application').map(a=>`<div class="section"><strong>${esc(a.family)}</strong> <span class="badge">${esc(a.status)}</span><p>${esc(a.answers)}</p><small>${esc(a.review||'Awaiting review')}</small></div>`).join('')||'<p>No applications.</p>'}</article></div><h2>Reminders</h2>${table(['Reminder','Due','Status'],records('reminder').map(r=>`<tr><td>${esc(r.text)}</td><td>${esc(r.at)}</td><td>${esc(r.status)}</td></tr>`))}<h2>Notification previews</h2>${(state.outbox||[]).map(o=>`<article class="card section"><span class="badge">${esc(o.status)}</span><pre>${esc(o.text)}</pre></article>`).join('')||empty('Generated messages appear here. Nothing is sent to Discord.')}`;}
-function settings(){if(state.role==='owner')$('#toolbar').append(button('Configure guild',configDialog),button('Configure roles',roleConfig),button('Configure tickets',ticketConfig),button('Configure welcome',welcomeConfig));$('#panel').innerHTML=`<div class="notice">Discord and Twitch credentials are optional. Local fixtures and the message preview queue work without external accounts.</div><h2>Access</h2>${table(['Account','Local ID','Role'],state.accounts.map(a=>`<tr><td>${esc(a.user__username)}</td><td>${a.user_id}</td><td>${a.role}</td></tr>`))}${scheduleSummary()}${communitySettings()}<h2>Configuration</h2><article class="card"><pre>${esc(JSON.stringify(state.guild.config,null,2))}</pre></article><h2>Audit history</h2>${table(['Time','Account','Action'],(state.audit||[]).map(a=>`<tr><td>${esc(a.created)}</td><td>${esc(a.actor)}</td><td>${esc(a.action)}</td></tr>`))}`;}
+function settings(){if(state.role==='owner')$('#toolbar').append(button('Configure guild',configDialog),button('Configure channels',channelConfig),button('Configure roles',roleConfig),button('Configure tickets',ticketConfig),button('Configure welcome',welcomeConfig));$('#panel').innerHTML=`<div class="notice">Discord and Twitch credentials are optional. Local fixtures and the message preview queue work without external accounts.</div><h2>Access</h2>${table(['Account','Local ID','Role'],state.accounts.map(a=>`<tr><td>${esc(a.user__username)}</td><td>${a.user_id}</td><td>${a.role}</td></tr>`))}${channelSummary()}${scheduleSummary()}${communitySettings()}<h2>Configuration</h2><article class="card"><pre>${esc(JSON.stringify(state.guild.config,null,2))}</pre></article><h2>Audit history</h2>${table(['Time','Account','Action'],(state.audit||[]).map(a=>`<tr><td>${esc(a.created)}</td><td>${esc(a.actor)}</td><td>${esc(a.action)}</td></tr>`))}`;}
 function configDialog(){const config=state.guild.config;const fields=[{name:'bot',label:'Bot channel',type:'text',default:config.channels?.bot||''},{name:'gear',label:'Gear channel',type:'text',default:config.channels?.gear||''},{name:'weekly',label:'Weekly summary enabled',type:'checkbox',default:config.weekly?.enabled||false},{name:'sync',label:'Roster sync enabled',type:'checkbox',default:config.sync?.enabled||false},{name:'welcome',label:'Welcome message',type:'textarea',default:config.welcome?.message||'Welcome to the guild!'}];openAction({label:'Guild configuration',fields,custom:async p=>call('admin','settings',{config:{channels:{...config.channels,bot:p.bot,gear:p.gear},weekly:{...config.weekly,enabled:p.weekly},sync:{...config.sync,enabled:p.sync},welcome:{...config.welcome,message:p.welcome}}})});}
 async function safeCall(m,a,p){try{const r=await call(m,a,p);toast('Saved');return r;}catch(e){toast(e.message);}}
 function openAction(a,defaults={}){if(!a)return;if(a.module==='operations'&&['recruitment_form','ticket_category'].includes(a.action)&&!a.custom){communityConfig(a.action,defaults.id);return;}if(a.module==='operations'&&a.action==='schedule'&&!a.custom){scheduleDialog(defaults.kind||'weekly');return;}activeAction={...a,defaults};$('#dialog-title').textContent=a.label;$('#fields').replaceChildren();$('#form-error').textContent='';$('#submit').hidden=false;$('#submit').textContent=a.action==='purge'?'Purge statistics':'Save';for(const f of a.fields){const label=document.createElement('label');label.textContent=f.label;let input;const value=defaults[f.name]??f.default;
@@ -149,6 +149,7 @@ function welcomeConfig(){
 
 const weekdays=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 function scheduleSummary(){
+ if(state.role!=='owner')return '<p>Schedule configuration is visible to guild owners.</p>';
  return '<h2>Schedules</h2><div class="grid">'+['weekly','sync'].map(kind=>{
   const config=state.guild.config[kind]||{};
   const title=kind==='weekly'?'Weekly summary':'Roster sync';
@@ -194,4 +195,24 @@ function communityConfig(kind,id){
   else {if(!p.name.trim())throw Error('Enter a category name');if(p.staff_role&&!/^[0-9]+$/.test(p.staff_role.trim()))throw Error('Staff role ID must contain only digits');p.staff_role=p.staff_role.trim();}
   return call('operations',kind,{...p,...(id?{id}:{})});
  }});
+}
+
+const channelLabels={bot:'Bot commands',gear:'Gear commands',welcome:'Welcome messages',events:'Event cards and reminders',leads:'Coaching notifications'};
+function channelSummary(){
+ if(state.role!=='owner')return '';
+ const channels=state.guild.config.channels||{};
+ return '<h2>Channels</h2>'+table(['Purpose','Destination'],Object.entries(channelLabels).map(([key,label])=>`<tr><td>${esc(label)}</td><td>${esc(channels[key]||(key==='bot'||key==='gear'?'No channel restriction':'preview'))}</td></tr>`));
+}
+function channelConfig(){
+ const channels=state.guild.config.channels||{};
+ openAction({label:'Notification and command channels',fields:Object.entries(channelLabels).map(([name,label])=>({name,label,type:'text',default:channels[name]||''})),custom:p=>{
+  const next={...channels};
+  for(const [key,value] of Object.entries(p)){
+   const channel=value.trim();
+   if(channel&&!/^[0-9]+$/.test(channel)&&!(['welcome','events','leads'].includes(key)&&channel==='preview'))throw Error(channelLabels[key]+': enter a numeric channel ID'+(['welcome','events','leads'].includes(key)?' or preview':'')+', or leave blank');
+   if(channel)next[key]=channel;else delete next[key];
+  }
+  return call('admin','settings',{config:{channels:next}});
+ }});
+ const help=document.createElement('p');help.textContent='Use Discord channel IDs. Blank command channels allow commands in any channel. Blank notification channels use the local preview queue. Saving channels does not enable delivery.';$('#fields').prepend(help);
 }
