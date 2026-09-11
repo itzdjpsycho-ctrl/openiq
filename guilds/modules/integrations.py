@@ -52,10 +52,19 @@ def handle(g,action,p,role,user):
     if action=='streams_refresh':
         client=os.getenv('TWITCH_CLIENT_ID'); token=os.getenv('TWITCH_ACCESS_TOKEN')
         if not client or not token: raise Invalid('Set TWITCH_CLIENT_ID and TWITCH_ACCESS_TOKEN, or use the local stream fixture')
-        response=httpx.get('https://api.twitch.tv/helix/streams',params={'game_id':'386821','first':100},headers={'Client-Id':client,'Authorization':'Bearer '+token},timeout=15)
+        headers={'Client-Id':client,'Authorization':'Bearer '+token}
+        response=httpx.get('https://api.twitch.tv/helix/streams',params={'game_id':'386821','first':100},headers=headers,timeout=15)
         if response.status_code==429: raise Invalid('Twitch rate limit reached; retry later')
         response.raise_for_status()
-        streams=[{'handle':s['user_login'],'title':s['title'],'viewers':s['viewer_count'],'category':'BDO','partner':False} for s in response.json()['data']]
+        data=response.json()['data']; partner_logins=set()
+        if data:
+            try:
+                users=httpx.get('https://api.twitch.tv/helix/users',params=[('login',s['user_login']) for s in data],headers=headers,timeout=15)
+                users.raise_for_status()
+                partner_logins={u['login'].casefold() for u in users.json()['data'] if u.get('broadcaster_type')=='partner'}
+            except (httpx.HTTPError,KeyError,TypeError,ValueError):
+                pass
+        streams=[{'handle':s['user_login'],'title':s['title'],'viewers':s['viewer_count'],'category':s.get('game_name') or 'BDO','partner':s['user_login'].casefold() in partner_logins} for s in data]
         return public(save(g,'streams',{'items':streams,'source':'Twitch','at':now()},'current'))
     raise Invalid('Unknown integration action')
 

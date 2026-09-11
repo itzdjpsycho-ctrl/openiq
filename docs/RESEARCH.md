@@ -70,3 +70,5 @@ A deeper search located [sch-28/ikusa_logger](https://github.com/sch-28/ikusa_lo
 OpenIQ independently builds private-channel permission overwrites, transcript updates, and read-only closure using the [official Discord guild-channel API](https://docs.discord.com/developers/resources/guild#create-guild-channel). The adapter is opt-in and tested with mocked responses; no live server writes have been performed.
 
 Welcome role buttons use the [official Add Guild Member Role API](https://docs.discord.com/developers/resources/guild#add-guild-member-role) through an explicit delivery gate. Local selections and mocked role-grant requests are independently tested.
+
+Twitch partner status is enriched in batches through the official [Get Users API](https://dev.twitch.tv/docs/api/reference#get-users), which accepts up to 100 combined login and ID filters and reports `broadcaster_type`. Profile lookup failure leaves the live directory usable with partner badges unset.

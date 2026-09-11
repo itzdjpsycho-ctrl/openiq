@@ -183,11 +183,18 @@ class WorkflowTests(TestCase):
         self.act('integrations','streams_fixture',{'streams':[{'handle':'player_one','title':'War','viewers':100,'partner':True}]})
         self.assertEqual(get(self.g,'streams','current').data['source'],'fixture')
         with patch.dict(os.environ,{'TWITCH_CLIENT_ID':'','TWITCH_ACCESS_TOKEN':''}),self.assertRaises(Invalid):self.act('integrations','streams_refresh')
-        response=Mock(status_code=200);response.json.return_value={'data':[{'user_login':'player_one','title':'War','viewer_count':100}]}
-        with patch.dict(os.environ,{'TWITCH_CLIENT_ID':'test','TWITCH_ACCESS_TOKEN':'test'}),patch('httpx.get',return_value=response):
-            self.assertEqual(self.act('integrations','streams_refresh')['source'],'Twitch')
-            response.status_code=429
-            with self.assertRaises(Invalid):self.act('integrations','streams_refresh')
+        response=Mock(status_code=200);response.json.return_value={'data':[{'user_login':'player_one','title':'War','viewer_count':100,'game_name':'Black Desert'}]}
+        users=Mock();users.json.return_value={'data':[{'login':'player_one','broadcaster_type':'partner'}]}
+        with patch.dict(os.environ,{'TWITCH_CLIENT_ID':'test','TWITCH_ACCESS_TOKEN':'test'}),patch('httpx.get',side_effect=[response,users]) as request:
+            refreshed=self.act('integrations','streams_refresh');self.assertEqual(refreshed['source'],'Twitch');self.assertTrue(refreshed['items'][0]['partner']);self.assertEqual(refreshed['items'][0]['category'],'Black Desert')
+            self.assertEqual(request.call_args_list[1].args[0],'https://api.twitch.tv/helix/users')
+        rate_limited=Mock(status_code=429)
+        with patch.dict(os.environ,{'TWITCH_CLIENT_ID':'test','TWITCH_ACCESS_TOKEN':'test'}),patch('httpx.get',return_value=rate_limited),self.assertRaises(Invalid):self.act('integrations','streams_refresh')
+        with patch.dict(os.environ,{'TWITCH_CLIENT_ID':'test','TWITCH_ACCESS_TOKEN':'test'}),patch('httpx.get',side_effect=[response,httpx.HTTPError('profiles unavailable')]):
+            self.assertFalse(self.act('integrations','streams_refresh')['items'][0]['partner'])
+        empty=Mock(status_code=200);empty.json.return_value={'data':[]}
+        with patch.dict(os.environ,{'TWITCH_CLIENT_ID':'test','TWITCH_ACCESS_TOKEN':'test'}),patch('httpx.get',return_value=empty) as request:
+            self.assertEqual(self.act('integrations','streams_refresh')['items'],[]);request.assert_called_once()
     def test_scheduled_source_failure_and_recurrence(self):
         self.act('operations','schedule',{'kind':'sync','weekday':0,'hour':0,'timezone':'UTC'})
         self.act('operations','tick',{'at':'2026-08-03T12:00:00Z'})
