@@ -2,7 +2,7 @@
 import os
 from unittest.mock import Mock,patch
 import httpx
-from django.test import TestCase
+from django.test import TestCase,override_settings
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from .models import Guild,Access,Record,Outbox
@@ -347,6 +347,7 @@ class WorkflowTests(TestCase):
         with self.assertRaises(Invalid):self.act('operations','challenge',{'opponent':m},self.member)
         s=self.act('live','start',{'title':'War'})
         with self.assertRaises(Invalid):self.act('live','ingest',{'session':s['id'],'events':[{}]*2001})
+    @override_settings(ALLOW_LOCAL_LOGIN=True)
     def test_access_and_onboarding_denials(self):
         from django.contrib.auth.models import AnonymousUser
         from .services import access
@@ -367,6 +368,7 @@ class WorkflowTests(TestCase):
     def test_unlinked_setclass_and_future_command_guard(self):
         with self.assertRaises(Invalid):self.act('commands','run',{'command':'setclass','arguments':{'class':'Shai'}})
         with patch('guilds.modules.commands.COMMANDS',['future-command']),self.assertRaises(Invalid):self.act('commands','run',{'command':'future-command'})
+    @override_settings(ALLOW_LOCAL_LOGIN=True)
     def test_miscellaneous_read_and_preview_boundaries(self):
         from .delivery import deliver
         from .discord_components import process

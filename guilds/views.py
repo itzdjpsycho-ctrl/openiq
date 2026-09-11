@@ -1,4 +1,5 @@
 import json
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
@@ -72,12 +73,19 @@ def onboard(request):
     from django.db import transaction
     from .modules.core import text
     try:
-        p=json.loads(request.body)
+        p=json.loads(request.body);server_id=str(p.get('server_id',''))
+        if not settings.ALLOW_LOCAL_LOGIN:
+            from .discord_auth import can_manage_server
+            if not request.session.get('discord_tokens') or not request.user.username.startswith('discord_'):
+                raise PermissionDenied('Discord login is required to create a guild')
+            server=next((server for server in request.session.get('discord_guilds',[]) if server.get('id')==server_id),None)
+            if not server or not can_manage_server(server):
+                raise PermissionDenied('Discord owner, Administrator, or Manage Guild permission is required')
         with transaction.atomic():
             name=text(p['name'],'guild name',80)
             if Guild.objects.filter(name__iexact=name).exists():
                 raise Invalid('That guild already exists')
-            g=Guild.objects.create(name=name,region=text(p.get('region','NA'),'region',12),server_id=str(p.get('server_id','')))
+            g=Guild.objects.create(name=name,region=text(p.get('region','NA'),'region',12),server_id=server_id)
             Access.objects.create(guild=g,user=request.user,role='owner')
             if p.get('names'):execute(request.user,g.pk,'roster','sync',{'names':p['names']})
         return JsonResponse({'id':g.pk,'name':g.name})

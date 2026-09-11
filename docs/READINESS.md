@@ -19,13 +19,13 @@ verification and the choice of a public host remain external launch checks.
   directly to Discord OAuth in production. Keep password login available only
   behind an explicit development setting; `/admin/` remains available to the
   rotating backend administrator.
-- [ ] **AUTH-03 — Verified Discord guild onboarding.** Persist the OAuth guild
+- [x] **AUTH-03 — Verified Discord guild onboarding.** Persist the OAuth guild
   claims in the server-side session and allow creation only for a Discord server
   where the user is owner, administrator, or has Manage Guild.
 - [ ] **AUTH-04 — Secure OAuth lifecycle.** Handle denied authorization, missing
   refresh tokens, account reuse, logout/session cleanup, and safe refresh failure
   messages without exposing credentials.
-- [ ] **AUTH-05 — First-run setup screen.** Let an authorized Discord owner select
+- [ ] **AUTH-05 — First-run setup screen (reserved for UX contributor).** Let an authorized Discord owner select
   a server, set region and guild name, configure the bot invite, and see which
   setup steps remain.
 - [ ] **AUTH-06 — Guild recovery constraints.** Require verified Discord authority
@@ -134,17 +134,17 @@ verification and the choice of a public host remain external launch checks.
 
 ## 6. Product completion and operator experience
 
-- [ ] **UX-01 — Complete settings forms.** Replace remaining raw nested settings
+- [ ] **UX-01 — Complete settings forms (reserved for UX contributor).** Replace remaining raw nested settings
   edits with validated forms for roles, channels, tickets, recruitment, schedules,
   capture, retention, and integrations.
-- [ ] **UX-02 — Setup and integration status.** Show Discord bot, OAuth, Twitch,
+- [ ] **UX-02 — Setup and integration status (reserved for UX contributor).** Show Discord bot, OAuth, Twitch,
   capture, scheduler, backup, and delivery status with actionable diagnostics.
-- [ ] **UX-03 — Empty/error/loading states.** Make every dashboard section usable
+- [ ] **UX-03 — Empty/error/loading states (reserved for UX contributor).** Make every dashboard section usable
   with no demo data and preserve entered values after validation failures.
-- [ ] **UX-04 — Accessibility and mobile pass.** Verify keyboard operation, focus,
+- [ ] **UX-04 — Accessibility and mobile pass (reserved for UX contributor).** Verify keyboard operation, focus,
   labels, contrast, reduced motion, narrow layouts, and screen-reader announcements
   for dynamic workflows.
-- [ ] **UX-05 — Guild-cluster boundaries.** Test two BDO guilds on one Discord
+- [ ] **UX-05 — Guild-cluster boundaries (reserved for UX contributor).** Test two BDO guilds on one Discord
   server and allied guilds in separate servers without data or permission leakage.
 - [ ] **DOC-01 — Production runbook.** Document Discord application creation, OAuth
   redirect, bot install permissions, first-run setup, backups, upgrade, recovery,

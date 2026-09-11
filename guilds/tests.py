@@ -1,6 +1,6 @@
 import json
 from datetime import datetime,timedelta,timezone
-from django.test import TestCase,Client
+from django.test import TestCase,Client,override_settings
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from guilds.models import Guild,Access,Record,Outbox
@@ -152,6 +152,7 @@ class DomainTests(TestCase):
             with p.open('a') as f:f.write('}\n')
             self.assertEqual(tail.read(),[{'id':'a'}]);self.assertEqual(tail.read(),[])
             p.write_text('{}\n');self.assertEqual(len(tail.read()),1)
+    @override_settings(ALLOW_LOCAL_LOGIN=True)
     def test_onboard_is_private(self):
         self.client.force_login(self.member)
         response=self.client.post('/onboard/',data=json.dumps({'name':'New guild','names':['Fresh']}),content_type='application/json')
