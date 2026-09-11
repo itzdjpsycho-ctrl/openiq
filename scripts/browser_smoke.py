@@ -51,6 +51,19 @@ with sync_playwright() as p:
         page.locator('nav').get_by_role('button',name='Gear',exact=True).click();page.get_by_role('button',name='Update gear',exact=True).click()
         for label,value in [('AP','300'),('Awakening AP','302'),('DP','400')]:page.get_by_label(label,exact=True).fill(value)
         page.get_by_role('button',name='Save',exact=True).click();page.wait_for_function('!document.querySelector("#dialog").open || document.querySelector("#form-error").textContent');assert not page.locator('#dialog').is_visible(), page.locator('#form-error').inner_text();assert page.locator('#panel strong').filter(has_text='702').count()==1
+        session=page.evaluate("async()=>await call('live','start',{title:'UI test fight'})")
+        page.evaluate("""async session=>await call('live','ingest',{session:session.id,events:[
+          {id:'ui-live-1',at:'2026-09-11T06:00:00Z',kind:'kill',player:'TestAlpha',target:'EnemyOne',guild:'Iron Vow',class:'Warrior',family:'EnemyFamily'},
+          {id:'ui-live-2',at:'2026-09-11T06:00:20Z',kind:'death',player:'EnemyTwo',target:'TestBeta',guild:'Moonfall',class:'Shai',family:'OtherFamily'}
+        ]})""",session)
+        page.locator('nav').get_by_role('button',name='Live War',exact=True).click()
+        assert page.locator('#live-totals').inner_text().startswith('1 kills · 1 deaths')
+        page.get_by_label('Enemy guild',exact=True).select_option('Iron Vow')
+        assert page.locator('#live-totals').inner_text().startswith('1 kills · 0 deaths')
+        assert page.locator('#feed .feed').count()==1
+        page.locator('#replay').fill('0')
+        assert page.locator('#live-totals').inner_text().startswith('0 kills · 0 deaths')
+        assert page.locator('#feed .feed').count()==0
         page.evaluate("async()=>await call('admin','settings',{config:{channels:{events:'789'},weekly:{weekday:2,hour:18,timezone:'UTC'}}})")
         page.locator('nav').get_by_role('button',name='Settings',exact=True).click()
         page.get_by_role('button',name='Configure guild',exact=True).click();page.get_by_label('Bot channel',exact=True).fill('123')
@@ -69,7 +82,7 @@ with sync_playwright() as p:
         parsed=page.evaluate("async()=>await parseIkusaText('[23:59:58] Alpha has killed Enemy from Rival\\n[00:00:02] Alpha died to Enemy from Rival','2026-09-11','+12:00')")
         assert len(parsed)==2 and parsed[1]['player']=='Enemy'
         assert not errors,errors
-        print('Browser passed: OpenIQ branding, 12 tabs, mobile layout, member search/create, war entry/inline edit, analytics overlays, event creation, gear update, settings preservation, ticket/welcome/access role configuration, browser IKUSA parsing, no JavaScript errors.')
+        print('Browser passed: OpenIQ branding, 12 tabs, mobile layout, member search/create, war entry/inline edit, analytics overlays, event creation, gear update, scoped live replay/debrief, settings preservation, ticket/welcome/access role configuration, browser IKUSA parsing, no JavaScript errors.')
     except Exception:
         print('FORM ERROR:',page.locator('#form-error').inner_text())
         print('INVALID:',page.evaluate('Array.from(document.querySelectorAll("#action-form :invalid")).map(e=>({tag:e.tagName,type:e.type,value:e.value,message:e.validationMessage}))'))

@@ -44,3 +44,22 @@ function showWarDetails(war,order='kills') {
   cell.append(button('Save row',()=>update(false)),button('Remove',()=>update(true)));
  });
 }
+
+// Every debrief view uses the same replay prefix and guild scope as the feed.
+function renderLiveBreakdown(events, guild) {
+ const groups=new Map(),players=new Map(),classes=new Map(),minutes=new Map();
+ let kills=0,deaths=0;
+ function add(map,key,label,field){if(!map.has(key))map.set(key,{label,kills:0,deaths:0});map.get(key)[field]++;}
+ for(const event of events){
+  const field=event.kind==='kill'?'kills':'deaths';if(field==='kills')kills++;else deaths++;
+  const character=event.kind==='kill'?event.target:event.player;
+  const player=familyNames&&event.family?event.family:character;
+  add(groups,event.guild,event.guild,field);
+  add(players,JSON.stringify([event.guild,player]),`${player} · ${event.guild}`,field);
+  add(classes,event.class,event.class,field);
+  add(minutes,event.at.slice(0,16),event.at.slice(0,16),field);
+ }
+ const breakdown=(title,values)=>`<article class="card section"><h3>${title}</h3>${values.size?table(['Opponent','Our kills','Our deaths','Our K/D'],[...values.values()].sort((a,b)=>b.kills-a.kills||a.label.localeCompare(b.label)).map(v=>`<tr><td>${esc(v.label)}</td><td>${v.kills}</td><td>${v.deaths}</td><td>${ratio(v.deaths?v.kills/v.deaths:v.kills?null:0)}</td></tr>`)):empty('No opponents in this replay scope.')}</article>`;
+ const timeline=[...minutes.values()].sort((a,b)=>a.label.localeCompare(b.label)).map(v=>({at:v.label,kills:v.kills,deaths:v.deaths}));
+ $('#live-breakdown').innerHTML=`<article class="card section"><h3>${esc(guild||'All enemy guilds')}</h3><p id="live-totals">${kills} kills · ${deaths} deaths · ${ratio(deaths?kills/deaths:kills?null:0)} K/D</p><p>All statistics follow the replay position and selected guild. Kills and deaths are from our guild’s perspective.</p>${timeline.length?chart(timeline,'Kills in live replay'):empty('No timeline events yet.')}</article>${breakdown('Opposing guilds',groups)}<div class="split">${breakdown(familyNames?'Enemy families':'Enemy characters',players)}${breakdown('Enemy classes',classes)}</div>`;
+}
