@@ -101,6 +101,22 @@ with sync_playwright() as p:
         assert 'channel=alpha_stream' in page.locator('.stream-player iframe').get_attribute('src')
         page.get_by_role('button',name='Close player',exact=True).click()
         assert page.get_by_label('Stream category',exact=True).count()==1
+        lifecycle=page.evaluate("""async()=>{
+          const alpha=records('member').find(m=>m.name==='TestAlpha'),beta=records('member').find(m=>m.name==='TestBeta');
+          const event=await call('events','save',{title:'Lifecycle war',type:'Node',at:'2026-09-12T08:00:00Z',timezone:'Pacific/Auckland',teams:[{name:'Main',capacity:10}]});
+          await call('events','signup',{event:event.id,member:alpha.id,team:'Main'});
+          const session=await call('live','start',{title:'Lifecycle capture'});
+          await call('live','ingest',{session:session.id,events:[{id:'lifecycle-kill',at:'2026-09-12T08:10:00Z',kind:'kill',player:'TestAlpha',target:'Enemy',guild:'Rival',class:'Warrior'}]});
+          const draft=await call('wars','review',{rows:[{name:'TestAlpha',kills:12,deaths:2},{name:'TestBeta',kills:4,deaths:3}]});
+          const war=await call('wars','finalize',{import:draft.id,date:'2026-09-12',type:'Node',result:'Win',location:'Lifecycle Node',participants:[{member:alpha.id,kills:12,deaths:2},{member:beta.id,kills:4,deaths:3}]});
+          await call('coaching','link_event',{event:event.id,war:war.id});await call('live','link',{session:session.id,war:war.id});
+          return {event:event.id,session:session.id,war:war.id,alpha:alpha.id};
+        }""")
+        assert page.evaluate("""flow=>{
+          const event=records('event').find(e=>e.id===flow.event),session=records('session').find(s=>s.id===flow.session),war=records('war').find(w=>w.id===flow.war),member=state.analytics.members.find(m=>m.id===flow.alpha);
+          return event.war===flow.war&&session.war===flow.war&&war.session===flow.session&&member.calendar.some(day=>day.war===flow.war&&day.present)&&state.analytics.timeline.some(day=>day.war===flow.war&&day.kills===16);
+        }""",lifecycle)
+        page.locator('nav').get_by_role('button',name='Analytics',exact=True).click();assert page.get_by_role('img',name='K/D across recorded wars',exact=True).count()==1
         page.evaluate("async()=>await call('admin','settings',{config:{channels:{events:'789'},weekly:{weekday:2,hour:18,timezone:'UTC'}}})")
         page.locator('nav').get_by_role('button',name='Settings',exact=True).click()
         page.get_by_role('button',name='Configure guild',exact=True).click();page.get_by_label('Bot channel',exact=True).fill('123')
@@ -119,7 +135,7 @@ with sync_playwright() as p:
         parsed=page.evaluate("async()=>await parseIkusaText('[23:59:58] Alpha has killed Enemy from Rival\\n[00:00:02] Alpha died to Enemy from Rival','2026-09-11','+12:00')")
         assert len(parsed)==2 and parsed[1]['player']=='Enemy'
         assert not errors,errors
-        print('Browser passed: OpenIQ branding, 12 tabs, mobile layout, member search/create, war entry/inline edit, CSV and real-OCR score finalization, direct war/event/session linking, analytics overlays, event creation, gear update, scoped live replay/debrief, stream filtering/player, settings preservation, ticket/welcome/access role configuration, browser IKUSA parsing, no JavaScript errors.')
+        print('Browser passed: OpenIQ branding, 12 tabs, mobile layout, member search/create, war entry/inline edit, CSV and real-OCR score finalization, direct war/event/session linking, complete signup/capture/review/reconciliation/analytics lifecycle, analytics overlays, event creation, gear update, scoped live replay/debrief, stream filtering/player, settings preservation, ticket/welcome/access role configuration, browser IKUSA parsing, no JavaScript errors.')
     except Exception:
         print('FORM ERROR:',page.locator('#form-error').inner_text())
         print('INVALID:',page.evaluate('Array.from(document.querySelectorAll("#action-form :invalid")).map(e=>({tag:e.tagName,type:e.type,value:e.value,message:e.validationMessage}))'))

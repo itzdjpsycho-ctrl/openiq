@@ -31,6 +31,7 @@ All major product areas have a usable local workflow or a clearly labeled adapte
 
 - Django domain/API tests exercise transactions, permissions, attendance, waitlists, alliances, reminders, OCR parsing, OAuth-state rejection, role mapping and event-file handling.
 - Chromium smoke checks cover all 12 dashboard sections, member creation/search, war entry, event creation, gear entry, browser IKUSA parsing and responsive layout with no JavaScript errors.
+- A single browser-driven war lifecycle verifies signup, live ingest, reviewed score finalization, event/session linking, attendance reconciliation and analytics propagation in sequence.
 - Real Tesseract invocation recognizes the generated two-panel fixture. A narrow/ambiguous numeric row is rejected by the parser.
 - `runbot --check` constructs all 53 commands without opening a Discord connection.
 - No live Discord, Twitch, BDO account, real packet capture or real war screenshot validation has been performed.
