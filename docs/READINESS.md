@@ -158,6 +158,9 @@ verification and the choice of a public host remain external launch checks.
     toast sizing. Verify empty history at 390px, keyboard navigation, and
     failed-save correction with the opt-in Edge browser regression test:
     `OPENIQ_BROWSER_TEST=1 python manage.py test guilds.test_ux_browser`.
+  - [x] **UX-04c: Roster search keyboard continuity.** Keep the search input
+    focused while typing and name the search, sort, and class-filter controls.
+    Browser regression verifies uninterrupted multi-character input.
   - [ ] **UX-04b: Full accessibility and mobile verification.** Complete the
     section-by-section keyboard, labels, contrast, narrow-layout, and
     screen-reader checks for dynamic workflows.
