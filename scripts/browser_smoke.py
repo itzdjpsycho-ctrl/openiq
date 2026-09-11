@@ -53,6 +53,11 @@ with sync_playwright() as p:
         page.get_by_role('button',name='Save',exact=True).click();page.wait_for_function('!document.querySelector("#dialog").open || document.querySelector("#form-error").textContent')
         assert not page.locator('#dialog').is_visible(),page.locator('#form-error').inner_text()
         assert page.evaluate("state.records.war.length===2 && state.records.import[0].status==='finalized'")
+        page.get_by_role('button',name='Read screenshots',exact=True).click()
+        page.locator('#images').set_input_files(['fixtures/ocr/war-names.png','fixtures/ocr/war-scores.png'])
+        page.get_by_role('button',name='Read images',exact=True).click();page.get_by_role('button',name='Verify scores',exact=True).wait_for()
+        page.get_by_role('button',name='Verify scores',exact=True).click();page.get_by_role('button',name='Save',exact=True).click()
+        page.wait_for_function("state.records.war.length===3 && state.records.import.filter(i=>i.status==='finalized').length===2")
         page.locator('nav').get_by_role('button',name='Analytics',exact=True).click()
         assert page.get_by_role('img',name='K/D across recorded wars',exact=True).count()==1
         assert page.locator('#class-bubbles [data-bubble]').count()>0
@@ -114,7 +119,7 @@ with sync_playwright() as p:
         parsed=page.evaluate("async()=>await parseIkusaText('[23:59:58] Alpha has killed Enemy from Rival\\n[00:00:02] Alpha died to Enemy from Rival','2026-09-11','+12:00')")
         assert len(parsed)==2 and parsed[1]['player']=='Enemy'
         assert not errors,errors
-        print('Browser passed: OpenIQ branding, 12 tabs, mobile layout, member search/create, war entry/inline edit, reviewed score finalization, direct war/event/session linking, analytics overlays, event creation, gear update, scoped live replay/debrief, stream filtering/player, settings preservation, ticket/welcome/access role configuration, browser IKUSA parsing, no JavaScript errors.')
+        print('Browser passed: OpenIQ branding, 12 tabs, mobile layout, member search/create, war entry/inline edit, CSV and real-OCR score finalization, direct war/event/session linking, analytics overlays, event creation, gear update, scoped live replay/debrief, stream filtering/player, settings preservation, ticket/welcome/access role configuration, browser IKUSA parsing, no JavaScript errors.')
     except Exception:
         print('FORM ERROR:',page.locator('#form-error').inner_text())
         print('INVALID:',page.evaluate('Array.from(document.querySelectorAll("#action-form :invalid")).map(e=>({tag:e.tagName,type:e.type,value:e.value,message:e.validationMessage}))'))

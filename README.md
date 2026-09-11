@@ -74,7 +74,7 @@ Set `DEMO_PASSWORD` before the first seed to choose a different demo password. S
 8. **Community:** open/reply/close tickets; apply/review recruitment; generate welcomes, reminders, summaries, rolls and the enhancement minigame. All notifications appear as local previews.
 9. **Settings:** configure roles, channels, schedules, create ticket categories and application forms, run scheduled work, and inspect the audit trail.
 
-Real OCR uses the system `tesseract` executable (`sudo apt install tesseract-ocr` if absent). Upload cropped names/stat panels in alternating pairs. Misaligned or ambiguous results require correction; they never silently finalize a war. Gear OCR recognizes labeled AP/AAP/DP text and always requires review.
+Real OCR uses the system `tesseract` executable (`sudo apt install tesseract-ocr` if absent). Upload cropped names/stat panels in alternating pairs. Misaligned or ambiguous results require correction; they never silently finalize a war. Gear OCR recognizes labeled AP/AAP/DP text and always requires review. The checked-in dark score panels are deterministic synthetic BDO-style regression inputs, not authentic game screenshots; regenerate them with `scripts/generate_ocr_fixtures.py`.
 
 ## Module layout
 
