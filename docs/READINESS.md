@@ -33,7 +33,7 @@ verification and the choice of a public host remain external launch checks.
 
 ## 2. Discord bot
 
-- [ ] **BOT-01 — Compose bot service and secrets.** Add a long-running bot service
+- [x] **BOT-01 — Compose bot service and secrets.** Add a long-running bot service
   with shared persistent data, health/restart behavior, Discord environment
   wiring, and an explicit switch controlling outbound delivery.
 - [ ] **BOT-02 — Development-guild command sync.** Support fast guild-scoped sync
