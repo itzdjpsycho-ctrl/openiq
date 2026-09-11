@@ -13,6 +13,9 @@ services:
       TRUST_PROXY: "${TRUST_PROXY:-0}"
       SEED_DEMO: "${SEED_DEMO:-1}"
       DEMO_PASSWORD: "${DEMO_PASSWORD:-prototype-local-2026}"
+      RUN_BACKEND_ADMIN_SETUP: "1"
+      ENABLE_BACKEND_ADMIN: "${ENABLE_BACKEND_ADMIN:-1}"
+      BACKEND_ADMIN_USERNAME: "${BACKEND_ADMIN_USERNAME:-openiq-admin}"
     volumes:
       - openiq-data:/data
     restart: unless-stopped
@@ -23,6 +26,7 @@ services:
     environment:
       RUN_MIGRATIONS: "0"
       SEED_DEMO: "0"
+      RUN_BACKEND_ADMIN_SETUP: "0"
     volumes:
       - openiq-data:/data
     depends_on:

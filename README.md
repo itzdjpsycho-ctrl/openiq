@@ -39,6 +39,8 @@ The application runs as UID 10001, includes Tesseract and uses Gunicorn/WhiteNoi
 
 Copy `.env.example` to `.env` to customize the port and initial demo password. `SEED_DEMO=0` disables demo initialization. For an empty installation, run `docker compose exec web python manage.py createsuperuser`, grant that account normal guild access through New guild, then add other accounts as needed. `HTTPS=1` enables secure cookies and HTTPS redirects when deployed behind TLS; set `TRUST_PROXY=1` only for a trusted reverse proxy that controls forwarded headers.
 
+Compose enables one break-glass Django backend account by default. Each web-container start creates or rotates its random password and prints the new `/admin/` credential to `docker compose logs web`; the scheduler never rotates it. Set `ENABLE_BACKEND_ADMIN=0` to disable that managed account on the next web start, or change its stable username with `BACKEND_ADMIN_USERNAME`. This account is for backend recovery and inspection, not normal guild membership.
+
 The Docker container hosts the platform. The desktop/live-interface capture process remains on the game host; offline PCAP parsing can also run in the image. No privileged container or host-network mode is required for the dashboard.
 
 ## Run on Ubuntu Desktop
