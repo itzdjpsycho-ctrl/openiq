@@ -1,6 +1,6 @@
 # Prototype feature status
 
-This is an implementation audit, not a claim of CritIQ parity. The [research inventory](RESEARCH.md) remains the target. “Working” below means local behavior is implemented; “adapter” means code exists but the real remote service was not exercised. “Simulated” is an explicit test input, not real game data.
+This audit records implemented features and known limitations. The [research inventory](RESEARCH.md) remains the target. “Working” below means local behavior is implemented; “adapter” means code exists but the real remote service was not exercised. “Simulated” is an explicit test input, not real game data.
 
 | Feature family | Working prototype | Remaining parity work |
 |---|---|---|
@@ -8,7 +8,7 @@ This is an implementation audit, not a claim of CritIQ parity. The [research inv
 | Roster | Add/edit/inactivate, search, class filter, stat sorting, draggable groups, class/spec and historical backfill, private notes, exceptions, dated vacations, merge | More filter/sort combinations, card animation; merges currently reconcile wars/gear/coaching but not every event identity reference |
 | Score ingestion | CSV review, fuzzy suggestions, paired-image Tesseract OCR, alignment validation, manual corrections, atomic finalize, repeat-finalize prevention | Real BDO screenshot corpus, language/crop presets and extraction accuracy benchmarking |
 | War history | Create/edit/delete, dates/types/results/caps, participant add/remove via form, class snapshot, K/D exclusion and alliance sharing, notes, live link | Dedicated per-row exclusion control and polished per-war awards sidebar; API supports row exclusions |
-| Analytics | Aggregate K/D, eligible-war attendance, timeline, class composition/performance, normalized comparison radar, heatmap, retention, awards | Exact undocumented CritIQ award formulas, physics bubble animation, all chart drill-down interactions |
+| Analytics | Aggregate K/D, eligible-war attendance, timeline, class composition/performance, normalized comparison radar, heatmap, retention, awards | Exact award formulas from the reference product (undocumented), physics bubble animation, all chart drill-down interactions |
 | Personal statistics | Linked-member dossier, recent wars, trends, attendance, opponent matchup totals, trophy case | Dedicated assessment text and personal weekly digest presentation |
 | Coaching | Private flags, KDR war window, attendance/miss/no-show thresholds, grace/vacation exemptions, leads/capacity, assignments, resolution cooldown | Every independent days/month/window combination; notification role ping formatting |
 | Signups | Create/edit, team capacities and per-team waitlists, drag/drop, withdrawals and promotion, lock/archive, presets, timezone-aware recurrence, event-card/missing-response previews; archival waitlist pity points | Native Discord signup buttons, nested visual subteams, custom card images, automatic recurring event creation, ally event-sharing links |
