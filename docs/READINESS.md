@@ -140,9 +140,12 @@ live installation checks remain outstanding.
 - [x] **OPS-02 — Consistent backup command.** Create timestamped SQLite backups
   using SQLite's online backup API, include the signing key and a manifest, and
   support a retention count without stopping the services.
-- [ ] **OPS-03 — Verified restore command.** Validate a backup manifest, refuse an
+- [x] **OPS-03 — Verified restore command.** Validate a backup manifest, refuse an
   accidental overwrite unless explicitly requested, restore atomically, and run
   Django checks before reporting success.
+  SQLite restore verifies checksums/integrity and runs Django/migration checks in
+  staging before publishing the directory. Overwrite retains the previous
+  directory. A real temporary-database backup/restore drill and regressions pass.
 - [x] **OPS-04 — Scheduled backup service.** Add an optional Compose service that
   writes backups to a bind-mounted operator directory and document a restore
   drill.

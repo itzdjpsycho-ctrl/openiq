@@ -37,8 +37,19 @@ active snapshot. Retention applies only after a successful snapshot.
 
 Use the same application revision and Python dependencies as the snapshot.
 Run this drill in a separate checkout and an empty temporary data directory;
-never point it at production data. Automated production restore, including
-overwrite protection and atomic replacement, remains OPS-03.
+never point it at production data. The supported SQLite restore command validates
+and checks a staged data directory before publishing it:
+
+```sh
+python manage.py restore SNAPSHOT_DIRECTORY --output /srv/openiq-restored
+```
+
+It refuses existing destinations unless `--overwrite` is explicit and refuses
+to replace the command's own `OPENIQ_DATA_DIR`. Run from an isolated configuration
+with all destination services stopped. Overwrite retains the old directory as
+`DESTINATION.previous-ID`; a failed final rename restores it automatically. After
+a process or host crash between the two renames, inspect that retained directory
+before restarting services. Never remove it until the restored data is accepted.
 
 1. Select a completed `openiq-backup-*` directory. Validate its manifest and
    both digests before copying anything. In Python, with `snapshot` set to its

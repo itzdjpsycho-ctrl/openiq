@@ -203,7 +203,8 @@ an operator-controlled location outside Git and copy them off the application
 disk. External Discord/Twitch secrets supplied through environment variables
 need separate operator backups. The optional Compose `backups` profile schedules
 snapshots to a host directory; see [backup operations and restore drill](docs/BACKUPS.md).
-Automated production restore remains tracked in the readiness checklist.
+The same guide documents the checked, staged `restore` command and its offline
+overwrite/recovery requirements.
 
 Research and independent behavior decisions: [investigation](docs/RESEARCH.md), [feature matrix](docs/FEATURES.md), [data contract](docs/CONTRACTS.md).
 
