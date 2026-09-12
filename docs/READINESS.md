@@ -176,9 +176,12 @@ live installation checks remain outstanding.
 
 ## 5. Security and privacy
 
-- [ ] **SEC-01 — Production security settings.** Validate allowed hosts, trusted
+- [x] **SEC-01 — Production security settings.** Validate allowed hosts, trusted
   origins, TLS/proxy settings, secure cookies, HSTS options, and production Django
   deployment checks.
+  Startup validates explicit hosts, HTTPS OAuth/origins and HSTS ranges. Secure
+  cookies/redirects and optional HSTS policies are wired through Compose. Django
+  `check --deploy --fail-level WARNING` passes with a complete TLS/HSTS configuration.
 - [ ] **SEC-02 — Request and login abuse controls.** Rate-limit OAuth starts,
   callbacks, recovery attempts, OCR uploads, and mutation endpoints with useful
   retry responses.

@@ -13,7 +13,7 @@ key_file = DATA_DIR / '.secret-key'
 if not os.getenv('SECRET_KEY') and not key_file.exists():
     key_file.write_text(secrets.token_urlsafe(64)); key_file.chmod(0o600)
 SECRET_KEY = os.getenv('SECRET_KEY') or key_file.read_text()
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',')
+ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',') if host.strip()]
 INSTALLED_APPS = ['django.contrib.admin','django.contrib.auth','django.contrib.contenttypes','django.contrib.sessions','django.contrib.messages','django.contrib.staticfiles','guilds']
 MIDDLEWARE = ['django.middleware.security.SecurityMiddleware','whitenoise.middleware.WhiteNoiseMiddleware','django.contrib.sessions.middleware.SessionMiddleware','django.middleware.common.CommonMiddleware','django.middleware.csrf.CsrfViewMiddleware','django.contrib.auth.middleware.AuthenticationMiddleware','guilds.discord_auth.RefreshDiscordRoles','django.contrib.messages.middleware.MessageMiddleware','django.middleware.clickjacking.XFrameOptionsMiddleware']
 ROOT_URLCONF = 'config.urls'
@@ -39,6 +39,12 @@ HTTPS = os.getenv('HTTPS','0') == '1'
 SESSION_COOKIE_SECURE = HTTPS
 CSRF_COOKIE_SECURE = HTTPS
 SECURE_SSL_REDIRECT = HTTPS
+SECURE_HSTS_SECONDS = int(os.getenv('HSTS_SECONDS','3600' if HTTPS else '0'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('HSTS_INCLUDE_SUBDOMAINS','0') == '1'
+SECURE_HSTS_PRELOAD = os.getenv('HSTS_PRELOAD','0') == '1'
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+X_FRAME_OPTIONS = 'DENY'
 SECURE_REDIRECT_EXEMPT = [r'^healthz/$', r'^readyz/$']
 CSRF_TRUSTED_ORIGINS = [x for x in os.getenv('CSRF_TRUSTED_ORIGINS','').split(',') if x]
 if os.getenv('TRUST_PROXY','0') == '1':
