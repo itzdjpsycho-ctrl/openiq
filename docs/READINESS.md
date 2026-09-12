@@ -98,9 +98,11 @@ live installation checks remain outstanding.
   result, outstanding corrections, and Discord delivery state.
   History includes an officer-only derived checklist with unlinked capture and
   import work shown explicitly. Guild/member isolation and JS syntax checks pass.
-- [ ] **WAR-06 — Capture handoff durability.** Authenticate capture submissions,
+- [x] **WAR-06 — Capture handoff durability.** Authenticate capture submissions,
   resume after disconnect, deduplicate retries, expose last-seen state, and retain
   a bounded diagnostic log.
+  Session-scoped expiring bearer credentials, retained JSONL forwarding, deduped
+  acknowledgements, last-seen and 50-entry diagnostics have offline regressions.
 - [ ] **WAR-07 — Import compatibility report.** Validate all supported synthetic
   CSV/OCR/IKUSA/JSONL inputs from one command and produce a clear operator report.
 - [ ] **WAR-08 — Export and correction history.** Export a complete war package and
