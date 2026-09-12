@@ -17,9 +17,17 @@ def execute(user,guild_id,module,action,payload):
     role=access(user,guild_id)
     Guild.objects.filter(pk=guild_id).update(revision=F('revision')+1)
     g=Guild.objects.get(pk=guild_id)
+    from guilds.models import Record
+    before_wars={r.key:r.data for r in Record.objects.filter(guild=g,kind='war')} if module in ('wars','live','coaching','commands','roster','admin') else None
     if module not in MODULES: raise Invalid('Unknown module')
     if not isinstance(payload,dict): raise Invalid('Payload must be an object')
     result=MODULES[module].handle(g,action,payload,role,user)
+    if before_wars is not None:
+        from .modules.core import save,now
+        after_wars={r.key:r.data for r in Record.objects.filter(guild=g,kind='war')}
+        for key in before_wars.keys()|after_wars.keys():
+            before=before_wars.get(key);after=after_wars.get(key)
+            if before!=after:save(g,'war_revision',{'war':key,'actor':user.username,'action':module+'.'+action,'at':now(),'before':before,'after':after})
     if module in ['events','commands'] and isinstance(result,dict) and result.get('id'):
         from guilds.models import Outbox,Record
         event=Record.objects.filter(guild=g,kind='event',key=str(result['id'])).first()

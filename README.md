@@ -164,6 +164,11 @@ Browser checks use optional `playwright` (`pip install -r requirements-dev.txt`,
 
 ## Configuration and data
 
+Officers can choose **Export war package** in History to download the war,
+participant identities, linked records and correction history. The equivalent CLI
+is `python manage.py export_war --guild ID --war WAR_ID --user OFFICER --output war.json`.
+The output contains private guild data; the CLI refuses to overwrite an existing file.
+
 Database settings and maintenance operations use a pluggable backend layer;
 domain queries use Django ORM. SQLite remains the supported default. See
 [database extension guide](docs/DATABASES.md) for adapter contracts, PostgreSQL

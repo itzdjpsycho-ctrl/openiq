@@ -103,13 +103,15 @@ live installation checks remain outstanding.
   a bounded diagnostic log.
   Session-scoped expiring bearer credentials, retained JSONL forwarding, deduped
   acknowledgements, last-seen and 50-entry diagnostics have offline regressions.
-- [ ] **WAR-07 — Import compatibility report.** Validate all supported synthetic
+- [x] **WAR-07 — Import compatibility report.** Validate all supported synthetic
   CSV/OCR/IKUSA/JSONL inputs from one command and produce a clear operator report.
   - [x] `verify_imports` reports all four formats and exits nonzero on failure;
     report regressions and real CSV/IKUSA/JSONL fixture checks pass.
-  - [ ] Run the real OCR fixture gate on a machine with Tesseract installed.
-- [ ] **WAR-08 — Export and correction history.** Export a complete war package and
+  - [x] Real OCR fixture gate passes with Tesseract 5.4 installed.
+- [x] **WAR-08 — Export and correction history.** Export a complete war package and
   retain an audit trail when finalized participant scores or metadata are edited.
+  Officer exports include linked events, captures, imports and before/after
+  corrections. Regression checks cover edits, deletion history and member denial.
 - [ ] **WAR-09 — Retention controls.** Configure retention for raw captures, OCR
   uploads, public recaps, and derived summaries without deleting finalized wars.
 
