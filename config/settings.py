@@ -7,6 +7,9 @@ DEBUG = os.getenv('DEBUG', '1') == '1'
 ALLOW_LOCAL_LOGIN = os.getenv('ALLOW_LOCAL_LOGIN', '0') == '1'
 OPENIQ_VERSION = os.getenv('OPENIQ_VERSION','development')
 REQUIRED_PROCESSES = [x for x in os.getenv('REQUIRED_PROCESSES','').split(',') if x in ('bot','scheduler')]
+REQUEST_LIMITS_ENABLED = os.getenv('REQUEST_LIMITS_ENABLED','1') == '1'
+REQUEST_LIMITS = {name:int(os.getenv('RATE_LIMIT_'+name.upper(),str(value))) for name,value in {'oauth':20,'recovery':5,'ocr':10,'mutation':240}.items()}
+TRUST_PROXY_HEADERS = os.getenv('TRUST_PROXY','0') == '1'
 DATA_DIR = Path(os.getenv('OPENIQ_DATA_DIR',str(BASE_DIR)))
 DATA_DIR.mkdir(parents=True,exist_ok=True)
 key_file = DATA_DIR / '.secret-key'
@@ -15,7 +18,7 @@ if not os.getenv('SECRET_KEY') and not key_file.exists():
 SECRET_KEY = os.getenv('SECRET_KEY') or key_file.read_text()
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',') if host.strip()]
 INSTALLED_APPS = ['django.contrib.admin','django.contrib.auth','django.contrib.contenttypes','django.contrib.sessions','django.contrib.messages','django.contrib.staticfiles','guilds']
-MIDDLEWARE = ['django.middleware.security.SecurityMiddleware','whitenoise.middleware.WhiteNoiseMiddleware','django.contrib.sessions.middleware.SessionMiddleware','django.middleware.common.CommonMiddleware','django.middleware.csrf.CsrfViewMiddleware','django.contrib.auth.middleware.AuthenticationMiddleware','guilds.discord_auth.RefreshDiscordRoles','django.contrib.messages.middleware.MessageMiddleware','django.middleware.clickjacking.XFrameOptionsMiddleware']
+MIDDLEWARE = ['django.middleware.security.SecurityMiddleware','whitenoise.middleware.WhiteNoiseMiddleware','django.contrib.sessions.middleware.SessionMiddleware','django.middleware.common.CommonMiddleware','django.middleware.csrf.CsrfViewMiddleware','django.contrib.auth.middleware.AuthenticationMiddleware','guilds.rate_limits.RequestBudgets','guilds.discord_auth.RefreshDiscordRoles','django.contrib.messages.middleware.MessageMiddleware','django.middleware.clickjacking.XFrameOptionsMiddleware']
 ROOT_URLCONF = 'config.urls'
 TEMPLATES = [{'BACKEND':'django.template.backends.django.DjangoTemplates','DIRS':[BASE_DIR/'templates'],'APP_DIRS':True,'OPTIONS':{'context_processors':['django.template.context_processors.request','django.contrib.auth.context_processors.auth','django.contrib.messages.context_processors.messages']}}]
 WSGI_APPLICATION = 'config.wsgi.application'

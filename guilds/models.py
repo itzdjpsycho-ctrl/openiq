@@ -44,3 +44,9 @@ class Outbox(models.Model):
     text = models.TextField()
     status = models.CharField(max_length=15, default='preview')
     created = models.DateTimeField(auto_now_add=True)
+
+
+class RequestLimit(models.Model):
+    key = models.CharField(max_length=64,primary_key=True)
+    count = models.PositiveIntegerField(default=0)
+    expires = models.PositiveBigIntegerField(db_index=True)

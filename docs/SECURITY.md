@@ -19,3 +19,12 @@ deployment warnings that the operator must review. Local development explicitly
 uses `DEBUG=1`, `HTTPS=0` and `ALLOW_LOCAL_LOGIN=1`; demo data is opt-in.
 
 Reference: [Django deployment checklist](https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/).
+
+Request budgets use the shared database and expire every minute. Defaults are
+20 OAuth/login requests, 5 recovery requests, 10 OCR uploads and 240 mutations
+per authenticated user or anonymous IP. Configure `RATE_LIMIT_OAUTH`,
+`RATE_LIMIT_RECOVERY`, `RATE_LIMIT_OCR`, and `RATE_LIMIT_MUTATION` for guild load.
+Blocked requests return HTTP 429 and Retry-After. Only a trusted proxy configuration
+permits the final X-Forwarded-For address to identify the client; configure that
+proxy to overwrite/append the real client address. Untrusted forwarding headers
+are ignored. Production startup rejects disabling request protection.

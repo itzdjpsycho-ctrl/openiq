@@ -182,9 +182,11 @@ live installation checks remain outstanding.
   Startup validates explicit hosts, HTTPS OAuth/origins and HSTS ranges. Secure
   cookies/redirects and optional HSTS policies are wired through Compose. Django
   `check --deploy --fail-level WARNING` passes with a complete TLS/HSTS configuration.
-- [ ] **SEC-02 — Request and login abuse controls.** Rate-limit OAuth starts,
+- [x] **SEC-02 — Request and login abuse controls.** Rate-limit OAuth starts,
   callbacks, recovery attempts, OCR uploads, and mutation endpoints with useful
   retry responses.
+  Database-backed per-minute budgets cover OAuth, recovery, OCR and mutations
+  across workers/restarts. Responses include Retry-After; identity keys are hashed.
 - [ ] **SEC-03 — Session and secret hygiene.** Define session lifetime, rotate
   sessions at login, clear Discord tokens at logout, redact credentials from
   errors/logs, and document secret rotation.
