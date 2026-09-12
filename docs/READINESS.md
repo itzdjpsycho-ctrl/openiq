@@ -276,9 +276,11 @@ this work builds on the contributor's existing forms and browser checks.
   server and allied guilds in separate servers without data or permission leakage.
   Shared-server role/autocomplete isolation, HTTP mutation denial, limited allied
   roster visibility, private-record exclusion and revocation after leaving pass.
-- [ ] **DOC-01 — Production runbook.** Document Discord application creation, OAuth
+- [x] **DOC-01 — Production runbook.** Document Discord application creation, OAuth
   redirect, bot install permissions, first-run setup, backups, upgrade, recovery,
   diagnostics, and shutdown.
+  RUNBOOK.md links the full host/Discord/onboarding/operations workflow and
+  distinguishes local diagnostics from the required installation acceptance.
 - [ ] **DOC-02 — Remove prototype contradictions.** Keep README, contracts, feature
   matrix, test totals, Compose defaults, and UI wording aligned with actual
   production behavior.
