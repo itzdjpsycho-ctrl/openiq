@@ -2,9 +2,11 @@
 
 **OpenIQ is unapologetically developed entirely with AI, with minimal human oversight.**
 
-A local guild-management prototype for Black Desert guilds. Django + SQLite power independent domain modules; the browser UI uses HTML/CSS/JavaScript.
+A self-hosted guild-management application for Black Desert guilds. Django with SQLite or PostgreSQL powers independent domain modules; the browser UI uses HTML/CSS/JavaScript.
 
 **Status:** working local platform with fixtures, reviewed imports and optional external adapters. A calibrated TCP/PCAP decoder is implemented and tested with synthetic captures; its historical calibration is not verified against the current BDO patch. Discord/Twitch adapters require credentials and have not been exercised against live accounts. See [feature status](docs/FEATURES.md) for the precise boundaries.
+
+See the [production runbook](docs/RUNBOOK.md) for Discord application setup, first-run onboarding and daily operations.
 
 ## Run with Docker
 
@@ -86,7 +88,7 @@ Set `DEMO_PASSWORD` before the first seed to choose a different demo password. S
 5. **Gear:** update gear and inspect history; deletion clears the current display without losing history. Add reviewed rival snapshots for guild rankings.
 6. **Live War:** start a session, generate a synthetic fight, import `fixtures/combat.jsonl`, or paste `fixtures/ikusa.log` into Import IKUSA text log with the date/timezone. Save, replay, link a war and enable/revoke a public recap.
 7. **Alliance:** as `demo`, invite Silver Meridian, switch guild and accept. Only explicitly shared wars contribute.
-8. **Community:** open/reply/close tickets; apply/review recruitment; generate welcomes, reminders, summaries, rolls and the enhancement minigame. All notifications appear as local previews.
+8. **Community:** open/reply/close tickets; apply/review recruitment; generate welcomes, reminders, summaries, rolls and the enhancement minigame. Notifications stay as previews until explicit delivery is enabled.
 9. **Settings:** configure roles, channels, schedules, create ticket categories and application forms, run scheduled work, and inspect the audit trail.
 
 Real OCR uses the system `tesseract` executable (`sudo apt install tesseract-ocr` if absent). Upload cropped names/stat panels in alternating pairs. Misaligned or ambiguous results require correction; they never silently finalize a war. Gear OCR recognizes labeled AP/AAP/DP text and always requires review. The checked-in dark score panels are deterministic synthetic BDO-style regression inputs, not authentic game screenshots; regenerate them with `scripts/generate_ocr_fixtures.py`.
@@ -102,14 +104,14 @@ Each module exposes `handle(guild, action, payload, role, user)` and uses shared
 - `integrations.py`, `logformat.py`, `guilds/capture.py`: OCR, roster HTML, Twitch and event-file adapters.
 - `commands.py`, `discord_auth.py`, `delivery.py`: local command routing, optional OAuth and explicit notification delivery.
 
-Records have a relational guild/kind/key envelope, unique constraints and module-owned JSON payloads. Mutations acquire the database writer lock before reading mutable state and audit successful actions in the same transaction. This favors a small extensible prototype; a larger deployment should use typed relational domain models, schema-versioned payloads and PostgreSQL.
+Records have a relational guild/kind/key envelope, unique constraints and module-owned JSON payloads. Mutations acquire the database writer lock before reading mutable state and audit successful actions in the same transaction. This targets small guild installations; PostgreSQL has native snapshot/restore and concurrency integration tests. Larger deployments still need workload-specific validation.
 
 ## Optional integrations and tools
 
 No Discord messages have been sent. No bot has been connected.
 
 ```bash
-# All 53 documented commands are constructed without a network connection.
+# All registered commands are constructed without a network connection.
 .venv/bin/python manage.py runbot --check
 
 # Read-only remote checks; requires the bot token but sends no messages.
@@ -163,7 +165,7 @@ Twitch uses `TWITCH_CLIENT_ID` and `TWITCH_ACCESS_TOKEN`; without them the demo 
 node --check static/app.js
 ```
 
-Browser checks use optional `playwright` (`pip install -r requirements-dev.txt`, then `playwright install chromium`). With the server running, execute `scripts/browser_smoke.py`. The script uses the default Playwright browser location; set `PLAYWRIGHT_BROWSERS_PATH` if you installed browsers elsewhere. Screenshots are in `docs/dashboard.png` and `docs/mobile.png`.
+Browser checks use optional `playwright` (`pip install -r requirements-dev.txt`, then `playwright install chromium`). With the server running, execute `scripts/browser_smoke.py`. The script uses the default Playwright browser location; set `PLAYWRIGHT_BROWSERS_PATH` if you installed browsers elsewhere. Screenshots are in `docs/dashboard.png` and `docs/mobile.png`. Install the pinned accessibility engine with `npm ci`; opt-in dashboard/onboarding checks run with `OPENIQ_BROWSER_TEST=1 python manage.py test guilds.test_ux_browser guilds.test_onboarding_browser`.
 
 ## Configuration and data
 

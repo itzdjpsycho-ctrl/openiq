@@ -281,9 +281,12 @@ this work builds on the contributor's existing forms and browser checks.
   diagnostics, and shutdown.
   RUNBOOK.md links the full host/Discord/onboarding/operations workflow and
   distinguishes local diagnostics from the required installation acceptance.
-- [ ] **DOC-02 — Remove prototype contradictions.** Keep README, contracts, feature
+- [x] **DOC-02 — Remove prototype contradictions.** Keep README, contracts, feature
   matrix, test totals, Compose defaults, and UI wording aligned with actual
   production behavior.
+  README, feature status and contracts describe enabled delivery, verified setup,
+  database support and remaining live checks; stale fixed test/command totals
+  were removed. The dashboard identifies a guild workspace rather than a prototype.
 - [ ] **QA-01 — Offline release gate.** Run Django checks, full statement/branch
   coverage, bot registry checks, OCR fixtures, packet fixtures, JavaScript syntax,
   Compose config validation, and the browser lifecycle from one command.
