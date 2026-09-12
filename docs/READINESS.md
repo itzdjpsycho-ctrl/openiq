@@ -30,9 +30,11 @@ live installation checks remain outstanding.
 - [x] **AUTH-04 — Secure OAuth lifecycle.** Handle denied authorization, missing
   refresh tokens, account reuse, logout/session cleanup, and safe refresh failure
   messages without exposing credentials.
-- [ ] **AUTH-05 — First-run setup screen (reserved for UX contributor).** Let an authorized Discord owner select
+- [x] **AUTH-05 — First-run setup screen.** Let an authorized Discord owner select
   a server, set region and guild name, configure the bot invite, and see which
   setup steps remain.
+  Verified server selection, region/name validation, invite setup and failed-save
+  recovery pass server and Chromium tests at 390px.
 - [x] **AUTH-06 — Guild recovery constraints.** Require verified Discord authority
   when applying an adoption key and audit both its issuer and redeemer.
 
@@ -216,8 +218,8 @@ UX reconciliation (2026-09-12): merged PR #3 and the contributor's published
 `ux/dashboard-feedback` branch both end at `4dff36d`. No newer UX PR or branch
 commit is published. UX-01a/b/c, UX-03a, and UX-04a/c are complete and verified
 with three browser regressions. The unchecked parent items below retain their
-remaining scope; AUTH-05 and all remaining UX work stay reserved for that
-contributor.
+remaining scope. The user authorized completion of the remaining tasks here;
+this work builds on the contributor's existing forms and browser checks.
 
 - [ ] **UX-01 — Complete settings forms (reserved for UX contributor).** Replace remaining raw nested settings
   edits with validated forms for roles, channels, tickets, recruitment, schedules,

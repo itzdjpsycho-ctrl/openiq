@@ -2,8 +2,8 @@ import json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404
-from django.views.decorators.http import require_POST
+from django.shortcuts import render, get_object_or_404,redirect
+from django.views.decorators.http import require_POST,require_http_methods
 from django.core.exceptions import PermissionDenied
 from .models import Guild,Record,Access,Audit,Outbox
 from .services import access,execute
@@ -14,6 +14,7 @@ from .catalog import ACTIONS
 @login_required
 def index(request):
     guilds=Guild.objects.filter(access__user=request.user).order_by('name')
+    if not guilds.exists():return redirect('/onboard/')
     return render(request,'dashboard.html',{'guilds':guilds,'actions':ACTIONS})
 
 @login_required
@@ -34,6 +35,10 @@ def state(request,guild_id):
     result={'guild':{'id':g.pk,'name':g.name,'revision':g.revision,'config':g.config if role=='owner' else {}},'role':role,'user':{'id':request.user.pk,'name':request.user.username},'records':records,'analytics':analytics.calculate(g,request.GET),'intelligence':intelligence.extended(g),'rankings':gear.rankings(g),'gear':gear.current(g),'flags':coaching.flags(g) if role!='member' else [],'actions':[a for a in ACTIONS if {'member':0,'admin':1,'owner':2}[a['role']]<={'member':0,'admin':1,'owner':2}[role]],'guilds':list(Guild.objects.filter(access__user=request.user).distinct().values('id','name')),'accounts':list(Access.objects.filter(guild=g).values('user_id','user__username','role')) if role=='owner' else []}
     if role!='member': result.update(outbox=list(Outbox.objects.filter(guild=g).order_by('-created').values('id','text','status','created')[:100]),audit=list(Audit.objects.filter(guild=g).order_by('-created').values('actor','action','created')[:100]))
     if role!='member':result['war_checklist']=checklist(g)
+    if role=='owner':
+        from .integration_status import status
+        from .modules.commands import COMMANDS
+        result['integration_status']=status(g);result['command_names']=COMMANDS
     return JsonResponse(result)
 
 @login_required
@@ -77,10 +82,16 @@ def recap(request,token):
     return render(request,'recap.html',{'session':session.data,'summary':live.summarize(session)})
 
 @login_required
-@require_POST
+@require_http_methods(['GET','POST'])
 def onboard(request):
     from django.db import transaction
-    from .modules.core import text
+    from .modules.core import text,choice
+    regions=['NA','EU','SEA','KR','JP','TW','SA','RU','MENA']
+    if request.method=='GET':
+        import os
+        from .discord_auth import can_manage_server
+        servers=[server for server in request.session.get('discord_guilds',[]) if can_manage_server(server)]
+        return render(request,'onboard.html',{'servers':servers,'regions':regions,'development':settings.ALLOW_LOCAL_LOGIN,'client_id':os.getenv('DISCORD_CLIENT_ID','')})
     try:
         p=json.loads(request.body);server_id=str(p.get('server_id',''))
         if not settings.ALLOW_LOCAL_LOGIN:
@@ -94,7 +105,7 @@ def onboard(request):
             name=text(p['name'],'guild name',80)
             if Guild.objects.filter(name__iexact=name).exists():
                 raise Invalid('That guild already exists')
-            g=Guild.objects.create(name=name,region=text(p.get('region','NA'),'region',12),server_id=server_id)
+            g=Guild.objects.create(name=name,region=choice(p.get('region','NA'),regions,'region'),server_id=server_id)
             Access.objects.create(guild=g,user=request.user,role='owner')
             if p.get('names'):execute(request.user,g.pk,'roster','sync',{'names':p['names']})
         return JsonResponse({'id':g.pk,'name':g.name})
