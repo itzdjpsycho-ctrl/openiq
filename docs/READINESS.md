@@ -160,8 +160,13 @@ live installation checks remain outstanding.
 - [ ] **OPS-06 — Graceful process behavior.** Confirm signal handling, shutdown,
   startup ordering, SQLite contention handling, and recovery after abrupt process
   termination for web, scheduler, and bot.
-- [ ] **OPS-07 — Upgrade workflow.** Document pull/build/migrate/backup/rollback
+  - [x] Scheduler restores signal handlers, stops between work items and clears
+    its heartbeat. Abrupt SQLite writer rollback and PostgreSQL concurrency pass.
+  - [ ] Rehearse Gunicorn/Compose shutdown and restart on the target Linux host.
+- [x] **OPS-07 — Upgrade workflow.** Document pull/build/migrate/backup/rollback
   steps and add a preflight command that checks the current data before upgrade.
+  `preflight` checks migrations, owners and war relationships without changing
+  records. UPGRADES.md covers backup, all writer services and rollback data rules.
 - [ ] **OPS-08 — Structured maintenance tools.** Add supported commands for user
   removal, Discord relinking, guild export, guild deletion, expired-token cleanup,
   and audit/outbox retention.
