@@ -21,6 +21,7 @@ def handle(g,action,p,role,user):
     if action=='welcome_role':
         member=owner_or_self(g,role,user,p['member']);allowed=g.config.get('welcome',{}).get('roles',['Raider','Social']);selected=choice(p['role'],allowed,'welcome role')
         member.data.setdefault('community_roles',[])
+        if g.config.get('welcome',{}).get('replace_selection'):member.data['community_roles']=[]
         if selected not in member.data['community_roles']:member.data['community_roles'].append(selected)
         member.save();return public(member)
     require(role)

@@ -61,9 +61,12 @@ live installation checks remain outstanding.
   ticket marker and messages by their delivery footer; an unresolved remote
   outcome stops for inspection instead of creating a duplicate. Offline failure
   and permission regressions pass; live Discord verification remains LIVE-01.
-- [ ] **BOT-08 — Welcome and role lifecycle.** Post welcome cards, grant only
+- [x] **BOT-08 — Welcome and role lifecycle.** Post welcome cards, grant only
   configured roles below the bot role, remove obsolete selections where desired,
   and explain Discord hierarchy/permission failures.
+  Remote grants verify Manage Roles, reject managed/everyone/higher roles, and
+  optionally replace roles previously granted by OpenIQ. Six welcome/component
+  tests pass; live role hierarchy verification remains LIVE-01.
 - [ ] **BOT-09 — Scheduler delivery.** Deliver due reminders exactly once with
   retry/backoff and restart-safe idempotency instead of leaving scheduled work as
   previews.
