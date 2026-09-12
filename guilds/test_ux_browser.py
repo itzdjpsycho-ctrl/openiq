@@ -233,3 +233,37 @@ class DashboardUXTests(StaticLiveServerTestCase):
                 self.assertTrue(page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
             finally:
                 browser.close()
+
+    def test_every_empty_section_and_load_failure(self):
+        from playwright.sync_api import sync_playwright
+        user=User.objects.create_user('all-sections')
+        guild=Guild.objects.create(name='No demo data')
+        Access.objects.create(user=user,guild=guild,role='owner')
+        self.client.force_login(user)
+        with sync_playwright() as playwright:
+            browser=playwright.chromium.launch(headless=True)
+            try:
+                page=browser.new_page(viewport={'width':390,'height':844}, reduced_motion='reduce')
+                errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
+                page.context.add_cookies([{'name':'sessionid','value':self.client.cookies['sessionid'].value,'url':self.live_server_url}])
+                page.goto(self.live_server_url)
+                page.wait_for_selector('#nav button')
+                for width in (390,1280):
+                    page.set_viewport_size({'width':width,'height':844})
+                    for section in page.locator('#nav button').all_text_contents():
+                        nav=page.get_by_role('button',name=section,exact=True);nav.focus();page.keyboard.press('Enter')
+                        self.assertEqual(page.locator('#title').inner_text(),section)
+                        self.assertTrue(page.locator('#panel').inner_text().strip(),section)
+                        self.assertTrue(page.evaluate('document.documentElement.scrollWidth<=innerWidth'),section)
+                        self.assertEqual(page.evaluate('document.activeElement.textContent'),section)
+                before=page.locator('#panel').inner_text()
+                page.route('**/state/**',lambda route:route.fulfill(status=503,body='Unavailable'))
+                page.get_by_role('button',name='Refresh',exact=False).click()
+                page.wait_for_function("!document.querySelector('#error').hidden")
+                self.assertEqual(page.locator('#panel').inner_text(),before)
+                self.assertEqual(page.locator('#load-status').inner_text(),'Update failed')
+                page.unroute('**/state/**')
+                page.get_by_role('button',name='Refresh',exact=False).click()
+                page.wait_for_function("document.querySelector('#error').hidden")
+                self.assertFalse(errors)
+            finally:browser.close()

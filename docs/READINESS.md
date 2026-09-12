@@ -240,13 +240,16 @@ this work builds on the contributor's existing forms and browser checks.
   capture, scheduler, backup, and delivery status with actionable diagnostics.
   Settings distinguishes configured providers, process heartbeats, received capture
   batches and queued delivery, with operator next steps and no credential exposure.
-- [ ] **UX-03 — Empty/error/loading states.** Make every dashboard section usable
+- [x] **UX-03 — Empty/error/loading states.** Make every dashboard section usable
   with no demo data and preserve entered values after validation failures.
   - [x] **UX-03a: Shared table and form feedback.** Explain empty tables, show
     saving state, prevent duplicate submission/dismissal while pending, retain
     entered values on failure, and focus the error for correction.
-  - [ ] **UX-03b: Section-specific states.** Verify every dashboard section with
+  - [x] **UX-03b: Section-specific states.** Verify every dashboard section with
     no demo data and complete its empty, error, and loading states.
+    All 12 sections pass empty-guild browser checks at 390px and 1280px.
+    Refresh failures retain the current view, announce the error and recover;
+    guild switches clear old data and obsolete responses cannot replace new ones.
 - [ ] **UX-04 — Accessibility and mobile pass.** Verify keyboard operation, focus,
   labels, contrast, reduced motion, narrow layouts, and screen-reader announcements
   for dynamic workflows.
