@@ -72,7 +72,8 @@ class ManagementTests(TestCase):
         m=execute(self.user,self.g.pk,'roster','save',{'name':'Alpha'})
         execute(self.user,self.g.pk,'roster','link',{'member':m['id'],'user_id':user.pk})
         e=execute(self.user,self.g.pk,'events','save',{'title':'War','at':'2026-09-01T00:00:00Z','teams':[{'name':'Front','capacity':1}]})
-        interaction.data={'custom_id':f"signup:{self.g.pk}:{e['id']}:0"}
+        from .discord_components import event_components
+        interaction.data={'custom_id':event_components(self.g,Record.objects.get(kind='event',key=e['id']))[0]['components'][0]['custom_id']}
         async_to_sync(bot.on_interaction)(interaction)
         self.assertEqual(interaction.followup.send.call_args.args[0],'Signup updated.')
         interaction.guild_id=999;async_to_sync(bot.on_interaction)(interaction)
@@ -92,6 +93,8 @@ class ManagementTests(TestCase):
         self.assertEqual(interaction.followup.send.call_args.args[0],'No guild access')
         interaction.data={'custom_id':'irrelevant'};async_to_sync(bot.on_interaction)(interaction)
         interaction.guild=None;async_to_sync(command.callback)(interaction)
+        self.assertIn('server',interaction.response.send_message.call_args.args[0])
+        interaction.data={'custom_id':'signup:1:key:0'};async_to_sync(bot.on_interaction)(interaction)
         self.assertIn('server',interaction.response.send_message.call_args.args[0])
     def test_bot_supports_guild_scoped_sync_and_validates_sync_mode(self):
         from unittest.mock import AsyncMock

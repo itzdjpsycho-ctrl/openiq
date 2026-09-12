@@ -69,18 +69,20 @@ class Command(BaseCommand):
         @bot.event
         async def on_interaction(interaction):
             custom_id=(interaction.data or {}).get('custom_id','')
-            if not custom_id.startswith(('signup:','welcome:')):return
+            if not isinstance(custom_id,str) or not custom_id.startswith(('signup:','welcome:')):return
+            if interaction.guild is None:
+                await interaction.response.send_message('Use this card in its Discord server.',ephemeral=True);return
             await interaction.response.defer(ephemeral=True)
             @sync_to_async
             def apply_component():
                 from guilds.discord_components import process
-                user=User.objects.get(username='discord_'+str(interaction.user.id))
+                user,_=User.objects.get_or_create(username='discord_'+str(interaction.user.id),defaults={'password':'!'})
                 gid=custom_id.split(':')[1];g=Guild.objects.get(pk=gid)
                 if g.server_id!=str(interaction.guild_id):raise Invalid('Wrong server')
                 tier=role_for(g,{'owner':interaction.guild.owner_id==interaction.user.id,'permissions':str(interaction.user.guild_permissions.value)},[r.id for r in interaction.user.roles])
                 if not tier:Access.objects.filter(guild=g,user=user).delete();raise Invalid('No guild access')
                 Access.objects.update_or_create(guild=g,user=user,defaults={'role':tier})
-                process(user,custom_id,deliver_roles=True)
+                process(user,custom_id,deliver_roles=True,interaction_id=str(interaction.id))
             try:await apply_component();text='Welcome role updated.' if custom_id.startswith('welcome:') else 'Signup updated.'
             except Exception as exc:text=error_message(exc)
             await respond(interaction,text)

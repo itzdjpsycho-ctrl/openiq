@@ -81,7 +81,7 @@ def autocomplete(kind):
                 if kind=='reminder' and record.data.get('user')!=uid:continue
                 label=str(record.data.get('name') or record.data.get('title') or record.data.get('text') or record.data.get('date') or record.key)
                 if current.casefold() in label.casefold():result.append(app_commands.Choice(name=label[:100],value=record.key))
-                if len(result)==25:break
+                if len(result)==25:return result
             return result
         return await choices()
     return complete

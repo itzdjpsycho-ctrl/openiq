@@ -49,7 +49,7 @@ live installation checks remain outstanding.
 - [x] **BOT-04 — Discord-safe responses.** Present domain results as readable
   messages or files, paginate output beyond Discord limits, and map validation
   and permission failures to stable user-facing responses.
-- [ ] **BOT-05 — Persistent interactive components.** Restore signup and welcome
+- [x] **BOT-05 — Persistent interactive components.** Restore signup and welcome
   views after bot restart and reject stale, malformed, cross-guild, or replayed
   component identifiers.
 - [ ] **BOT-06 — Event message lifecycle.** Create and update signup cards,

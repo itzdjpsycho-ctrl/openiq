@@ -6,8 +6,9 @@ from .services import access,execute
 from .discord_tickets import snowflake
 
 def components(g,member):
+    from .discord_components import signed_id
     roles=g.config.get('welcome',{}).get('role_ids',{})
-    buttons=[{'type':2,'style':1,'label':str(label)[:80],'custom_id':f'welcome:{g.pk}:{member.key}:{snowflake(role_id,"welcome role ID")}'} for label,role_id in list(roles.items())[:25]]
+    buttons=[{'type':2,'style':1,'label':str(label)[:80],'custom_id':signed_id('welcome',g,member.key,snowflake(role_id,'welcome role ID'))} for label,role_id in list(roles.items())[:25]]
     return [{'type':1,'components':buttons[i:i+5]} for i in range(0,len(buttons),5)]
 
 def choose(user,g,member_key,role_id,enabled=False):
