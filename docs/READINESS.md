@@ -109,9 +109,12 @@ live installation checks remain outstanding.
 - [ ] **OPS-03 — Verified restore command.** Validate a backup manifest, refuse an
   accidental overwrite unless explicitly requested, restore atomically, and run
   Django checks before reporting success.
-- [ ] **OPS-04 — Scheduled backup service.** Add an optional Compose service that
+- [x] **OPS-04 — Scheduled backup service.** Add an optional Compose service that
   writes backups to a bind-mounted operator directory and document a restore
   drill.
+  The `backups` profile runs immediate and periodic snapshots with configurable
+  retention and retry delay. See [backup operations](BACKUPS.md) for the isolated
+  restore drill. Scheduler tests pass; live Docker rehearsal remains LIVE-03.
 - [ ] **OPS-05 — Readiness and diagnostics.** Separate liveness from readiness and
   report database access, migrations, writable storage, bot/scheduler heartbeat,
   and version without revealing secrets.

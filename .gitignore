@@ -13,3 +13,4 @@ staticfiles/
 !.coveragerc
 htmlcov/
 coverage.json
+backups/

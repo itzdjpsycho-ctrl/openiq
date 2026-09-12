@@ -181,8 +181,9 @@ snapshot and retains the newest requested count. Directories use mode 0700 and
 files use 0600. Backups contain private guild data and credentials; store them in
 an operator-controlled location outside Git and copy them off the application
 disk. External Discord/Twitch secrets supplied through environment variables
-need separate operator backups. Automated restore and scheduled backups remain
-tracked in the readiness checklist.
+need separate operator backups. The optional Compose `backups` profile schedules
+snapshots to a host directory; see [backup operations and restore drill](docs/BACKUPS.md).
+Automated production restore remains tracked in the readiness checklist.
 
 Research and independent behavior decisions: [investigation](docs/RESEARCH.md), [feature matrix](docs/FEATURES.md), [data contract](docs/CONTRACTS.md).
 
