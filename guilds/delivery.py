@@ -1,6 +1,7 @@
 """Explicitly enabled Discord delivery; default behavior is always a local preview."""
 import os
 import httpx
+import hashlib
 from .models import Outbox,Record
 from .modules.core import save,Invalid
 
@@ -17,7 +18,32 @@ def deliver(item,enabled=False):
     if components:
         payload['components']=components.data['components']
         payload['embeds']=components.data.get('embeds',[])
+    marker='OpenIQ delivery '+str(item.guild_id)+':'+str(item.pk)
+    if not previous:
+        pending=Record.objects.filter(guild=item.guild,kind='delivery_pending',key=str(item.pk)).first()
+        if pending:
+            # Recover remote success after a lost response or failed local save.
+            before=None
+            while True:
+                params={'limit':100}
+                if before:params['before']=before
+                found=httpx.request('GET',url,headers={'Authorization':'Bot '+os.environ['DISCORD_BOT_TOKEN']},params=params,timeout=15)
+                found.raise_for_status();messages=found.json()
+                match=next((m for m in messages if any(e.get('footer',{}).get('text')==marker for e in m.get('embeds',[])) and m.get('author',{}).get('bot')),None)
+                if match:
+                    previous=save(item.guild,'delivery',{'message_id':match['id'],'channel':item.channel},str(item.pk))
+                    url+='/'+match['id'];method='PATCH';break
+                if len(messages)<100:
+                    raise Invalid('Delivery outcome is unresolved; inspect the channel before retrying. No duplicate message was sent.')
+                before=messages[-1]['id']
+        else:
+            save(item.guild,'delivery_pending',{'channel':item.channel},str(item.pk))
+    payload['embeds']=[*payload.get('embeds',[]),{'footer':{'text':marker}}]
+    if method=='POST':
+        payload['nonce']=hashlib.sha256(marker.encode()).hexdigest()[:24]
+        payload['enforce_nonce']=True
     response=httpx.request(method,url,headers={'Authorization':'Bot '+os.environ['DISCORD_BOT_TOKEN']},json=payload,timeout=15)
     response.raise_for_status();message=response.json()
     save(item.guild,'delivery',{'message_id':message['id'],'channel':item.channel},str(item.pk));item.status='sent';item.save()
+    Record.objects.filter(guild=item.guild,kind='delivery_pending',key=str(item.pk)).delete()
     return {'status':'sent','message_id':message['id']}

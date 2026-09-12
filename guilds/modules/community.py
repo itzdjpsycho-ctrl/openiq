@@ -44,8 +44,8 @@ def handle(g,action,p,role,user):
         return {'text':json.dumps(plan(g,get(g,'ticket',p['ticket'])),indent=2)}
     if action=='review_application':
         a=get(g,'application',p['application']); a.data.update(status=choice(p['status'],['accepted','rejected'],'status'),review=text(p['review'],maximum=3000),reviewer=user.username); a.save(); return public(a)
-    if action=='close_ticket':
-        t=get(g,'ticket',p['ticket']); t.data['status']='closed'; t.save(); return public(t)
+    if action in ['close_ticket','reopen_ticket']:
+        t=get(g,'ticket',p['ticket']); t.data['status']='closed' if action=='close_ticket' else 'open'; t.save(); return public(t)
     if action=='welcome':
         member=get(g,'member',p['member']) if p.get('member') else None
         name=member.data['name'] if member else text(p['name'])

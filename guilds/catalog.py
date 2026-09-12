@@ -39,6 +39,7 @@ ACTIONS=[
  a('community','ticket','Open ticket',[f('category','Category',default='General'),f('subject','Subject'),f('text','Message','textarea')],'member'),
  a('community','reply','Reply to ticket',[f('ticket','Ticket','ticket'),f('text','Reply','textarea')],'member'),
  a('community','close_ticket','Close ticket',[f('ticket','Ticket','ticket')]),
+ a('community','reopen_ticket','Reopen ticket',[f('ticket','Ticket','ticket')]),
  a('community','ticket_preview','Preview Discord ticket channel',[f('ticket','Ticket','ticket')]),
  a('community','apply','Submit application',[f('family','Family name'),f('answers','Tell us about your class, gear and availability','textarea')],'member'),
  a('community','review_application','Review application',[f('application','Application','application'),f('status','Decision','select',['accepted','rejected']),f('review','Review notes','textarea')]),

@@ -55,8 +55,12 @@ live installation checks remain outstanding.
 - [x] **BOT-06 — Event message lifecycle.** Create and update signup cards,
   capacities, waitlists, locks, archive state, recurrence, and missing-response
   reminders through Discord.
-- [ ] **BOT-07 — Ticket lifecycle.** Create private channels, synchronize replies,
+- [x] **BOT-07 — Ticket lifecycle.** Create private channels, synchronize replies,
   close/reopen tickets, retain transcripts, and reconcile partial remote failures.
+  Reopen is officer-only and preserves replies. Retry recovers channels by their
+  ticket marker and messages by their delivery footer; an unresolved remote
+  outcome stops for inspection instead of creating a duplicate. Offline failure
+  and permission regressions pass; live Discord verification remains LIVE-01.
 - [ ] **BOT-08 — Welcome and role lifecycle.** Post welcome cards, grant only
   configured roles below the bot role, remove obsolete selections where desired,
   and explain Discord hierarchy/permission failures.
