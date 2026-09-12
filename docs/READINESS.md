@@ -93,9 +93,11 @@ live installation checks remain outstanding.
   event, OCR review, correction, finalization, live linking, and debrief.
 - [x] **WAR-04 — Replay-scoped debrief.** Live-war summaries can isolate replay
   segments and remain connected to the finalized war.
-- [ ] **WAR-05 — Operational war checklist.** Provide a single pre-war/during-war/
+- [x] **WAR-05 — Operational war checklist.** Provide a single pre-war/during-war/
   post-war view showing event, signup state, capture state, review state, finalized
   result, outstanding corrections, and Discord delivery state.
+  History includes an officer-only derived checklist with unlinked capture and
+  import work shown explicitly. Guild/member isolation and JS syntax checks pass.
 - [ ] **WAR-06 — Capture handoff durability.** Authenticate capture submissions,
   resume after disconnect, deduplicate retries, expose last-seen state, and retain
   a bounded diagnostic log.
