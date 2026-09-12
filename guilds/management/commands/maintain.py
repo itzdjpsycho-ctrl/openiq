@@ -57,7 +57,7 @@ class Command(BaseCommand):
             target=User.objects.select_for_update().get(username=options['username'])
             if not Access.objects.filter(guild=guild,user=target).exists():raise CommandError('The target user must belong to this guild')
             execute(actor,guild.pk,'roster','link',{'member':options['member'],'user_id':target.pk,'discord_id':options['discord_id']})
-        elif operation=='cleanup':
+        else:  # The remaining parser choice is cleanup.
             cutoff=timezone.now()-timedelta(days=options['days'])
             for token in Record.objects.filter(guild=guild,kind__in=['capture_token','adoption']):
                 expiry=token.data.get('expires',0 if token.kind=='capture_token' else '')

@@ -17,14 +17,20 @@ class Command(BaseCommand):
 
     def handle(self,*args,**options):
         source=options['snapshot'].resolve();target=options['output'].absolute()
-        if options['timeout']<1:raise CommandError('timeout must be positive')
-        if target.is_symlink() or target.resolve()==settings.DATA_DIR.resolve():raise CommandError('Use an isolated OPENIQ_DATA_DIR for this command; never replace the running command’s data directory')
-        if target.exists() and not options['overwrite']:raise CommandError('Output exists; use --overwrite only after stopping all services')
-        if target.exists() and not target.is_dir():raise CommandError('Output must be a data directory')
-        if source==target.resolve() or target.resolve() in source.parents:raise CommandError('Backup must be outside the destination directory')
+        if options['timeout']<1:
+            raise CommandError('timeout must be positive')
+        if target.is_symlink() or target.resolve()==settings.DATA_DIR.resolve():
+            raise CommandError('Use an isolated OPENIQ_DATA_DIR for this command; never replace the running command’s data directory')
+        if target.exists() and not options['overwrite']:
+            raise CommandError('Output exists; use --overwrite only after stopping all services')
+        if target.exists() and not target.is_dir():
+            raise CommandError('Output must be a data directory')
+        if source==target.resolve() or target.resolve() in source.parents:
+            raise CommandError('Backup must be outside the destination directory')
         target.parent.mkdir(parents=True,exist_ok=True)
         manifest,filename=validate_snapshot(source)
-        if filename!='db.sqlite3':raise CommandError('Use native pg_restore for a PostgreSQL snapshot; this command publishes SQLite directories')
+        if filename!='db.sqlite3':
+            raise CommandError('Use native pg_restore for a PostgreSQL snapshot; this command publishes SQLite directories')
         with tempfile.TemporaryDirectory(prefix='.openiq-restore-',dir=target.parent) as temporary:
             stage=Path(temporary);stage.chmod(0o700)
             for name in ('db.sqlite3','.secret-key','manifest.json'):
@@ -32,7 +38,8 @@ class Command(BaseCommand):
             validate_snapshot(stage)
             try:
                 with closing(sqlite3.connect((stage/'db.sqlite3').as_uri()+'?mode=ro',uri=True)) as database:
-                    if database.execute('PRAGMA integrity_check').fetchall()!=[('ok',)]:raise ValueError()
+                    if database.execute('PRAGMA integrity_check').fetchall()!=[('ok',)]:
+                        raise ValueError()
             except (sqlite3.Error,ValueError):raise CommandError('Snapshot failed SQLite integrity validation') from None
             environment=os.environ.copy()
             environment.update(OPENIQ_DATA_DIR=str(stage),DATABASE_PATH=str(stage/'db.sqlite3'),DATABASE_BACKEND='sqlite')

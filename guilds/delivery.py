@@ -11,7 +11,8 @@ from .models import Outbox,Record
 from .modules.core import save,Invalid
 
 def deliver(item,enabled=False,queued=False):
-    if not enabled:return _deliver(item,False)
+    if not enabled:
+        return _deliver(item,False)
     # Persist a claim before network I/O so concurrent commands/workers cannot
     # both create a message. A crashed process relinquishes its claim in an hour.
     claim=uuid.uuid4().hex
@@ -19,9 +20,11 @@ def deliver(item,enabled=False,queued=False):
         Guild.objects.filter(pk=item.guild_id).update(revision=F('revision')+1)
         state=Record.objects.filter(guild=item.guild,kind='delivery_retry',key=str(item.pk)).first()
         data=state.data if state else {}
-        if data.get('lease_until',0)>time.time():return {'status':'busy'}
+        if data.get('lease_until',0)>time.time():
+            return {'status':'busy'}
         item.refresh_from_db()
-        if queued and item.status!='preview':return {'status':item.status}
+        if queued and item.status!='preview':
+            return {'status':item.status}
         data.update(claim=claim,lease_until=time.time()+3600)
         save(item.guild,'delivery_retry',data,str(item.pk))
     try:
@@ -41,9 +44,12 @@ def deliver(item,enabled=False,queued=False):
 
 
 def _deliver(item,enabled=False):
-    if not enabled:return {'status':'preview','text':item.text,'channel':item.channel}
-    if os.getenv('ENABLE_DISCORD_DELIVERY')!='1' or not os.getenv('DISCORD_BOT_TOKEN'):raise Invalid('Discord delivery is not enabled')
-    if not item.channel.isdecimal():raise Invalid('Set a numeric Discord channel ID before delivery')
+    if not enabled:
+        return {'status':'preview','text':item.text,'channel':item.channel}
+    if os.getenv('ENABLE_DISCORD_DELIVERY')!='1' or not os.getenv('DISCORD_BOT_TOKEN'):
+        raise Invalid('Discord delivery is not enabled')
+    if not item.channel.isdecimal():
+        raise Invalid('Set a numeric Discord channel ID before delivery')
     previous=Record.objects.filter(guild=item.guild,kind='delivery',key=str(item.pk)).first()
     if previous and previous.data['channel']!=item.channel:
         previous.delete();previous=None

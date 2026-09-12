@@ -13,7 +13,8 @@ def consume(identity,group,limit):
     with transaction.atomic():
         RequestLimit.objects.filter(expires__lte=now).delete()
         row,_=RequestLimit.objects.select_for_update().get_or_create(key=key,defaults={'expires':(window+1)*60})
-        if row.count>=limit:return False,row.expires-now
+        if row.count>=limit:
+            return False,row.expires-now
         row.count+=1;row.save(update_fields=['count'])
     return True,(window+1)*60-now
 

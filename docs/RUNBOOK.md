@@ -11,9 +11,9 @@ before officers rely on a particular installation.
    Record its application/client ID. In OAuth2, add exactly
    `https://YOUR_HOST/auth/discord/callback/` as an allowed redirect. Store the
    client secret in the host's private `.env`, never in Git or browser settings.
-2. Create/reset the bot token in the application's Bot settings. Enable Server
-   Members Intent for role checks. The bot uses guild/member intents; it does not
-   require privileged Message Content access for its slash-command workflows.
+2. Create/reset the bot token in the application's Bot settings. The bot uses default, non-privileged intents. Role checks use interaction
+   membership data and REST requests; these slash-command workflows do not
+   require privileged Server Members or Message Content intents.
 3. Install the bot with scopes `bot` and `applications.commands`. Grant View
    Channels, Send Messages, Embed Links, Read Message History, Manage Channels
    (tickets) and Manage Roles (welcome selections). The onboarding screen supplies
@@ -48,7 +48,7 @@ Demo seeding and member password login stay disabled in production.
 Open the HTTPS site and sign in with Discord. A server owner, administrator or
 user with Manage Guild can select a verified server, name the BDO guild and set
 its region. In Settings, configure owner/admin/member role IDs, channel
- destinations, ticket staff/categories, welcome selections and schedules. A user
+destinations, ticket staff/categories, welcome selections and schedules. A user
 without a matching role does not automatically gain member access. Multiple BDO
 guilds may share a Discord server; set each guild's roles separately and select
 `guild_name` in ambiguous slash commands.

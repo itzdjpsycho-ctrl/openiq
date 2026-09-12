@@ -12,7 +12,8 @@ def permissions_for(server,roles,membership,channel=None):
     permissions=0
     for role in roles:
         if str(role['id']) in owned:permissions|=int(role['permissions'])
-    if permissions & 8:return (1<<64)-1
+    if permissions & 8:
+        return (1<<64)-1
     if channel:
         overwrites=channel.get('permission_overwrites',[])
         for group in ([o for o in overwrites if str(o['id'])==server],
@@ -31,7 +32,8 @@ class Command(BaseCommand):
 
     def handle(self,*args,**options):
         token=os.getenv('DISCORD_BOT_TOKEN')
-        if not token:raise CommandError('Set DISCORD_BOT_TOKEN to run read-only bot diagnostics.')
+        if not token:
+            raise CommandError('Set DISCORD_BOT_TOKEN to run read-only bot diagnostics.')
         reports=[]
         with httpx.Client(base_url='https://discord.com/api/v10',headers={'Authorization':'Bot '+token},timeout=15) as client:
             def read(path):
@@ -42,12 +44,14 @@ class Command(BaseCommand):
                 raise CommandError('Cannot verify the bot token/application. Check credentials and connectivity; no changes were made.') from None
             guilds=Guild.objects.all()
             if options['guild'] is not None:guilds=guilds.filter(pk=options['guild'])
-            if not guilds.exists():raise CommandError('No configured guilds match this request.')
+            if not guilds.exists():
+                raise CommandError('No configured guilds match this request.')
             for guild in guilds:
                 checks={'token':True,'intents':{'guilds':True,'privileged_intents_required':False}}
                 try:
                     server=str(guild.server_id)
-                    if not server.isdecimal():raise ValueError('Configure a numeric Discord server ID.')
+                    if not server.isdecimal():
+                        raise ValueError('Configure a numeric Discord server ID.')
                     read('/guilds/'+server);checks['installed']=True
                     membership=read(f'/guilds/{server}/members/{bot["id"]}')
                     roles=read(f'/guilds/{server}/roles')

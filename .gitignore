@@ -17,3 +17,6 @@ backups/
 .capture-token
 .heartbeat-*.json
 node_modules/
+
+/*.log
+/release-report.json

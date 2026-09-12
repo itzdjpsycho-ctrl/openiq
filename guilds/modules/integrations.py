@@ -21,11 +21,14 @@ def roster_html(html):
 def ocr(image_bytes,timeout=30):
     from PIL import Image, ImageOps
     import pytesseract
-    if len(image_bytes)>10*1024*1024: raise Invalid('Image exceeds 10 MB')
+    if len(image_bytes)>10*1024*1024:
+        raise Invalid('Image exceeds 10 MB')
     try:
         with Image.open(io.BytesIO(image_bytes)) as im:
-            if im.format not in ('PNG','JPEG','WEBP'):raise Invalid('Use a PNG, JPEG or WebP image')
-            if im.width*im.height>20000000: raise Invalid('Image exceeds 20 megapixels')
+            if im.format not in ('PNG','JPEG','WEBP'):
+                raise Invalid('Use a PNG, JPEG or WebP image')
+            if im.width*im.height>20000000:
+                raise Invalid('Image exceeds 20 megapixels')
             im.verify()
         with Image.open(io.BytesIO(image_bytes)) as im:
             im.load()
@@ -36,7 +39,8 @@ def ocr(image_bytes,timeout=30):
 def handle(g,action,p,role,user):
     if action=='twitch_link':
         m=owner_or_self(g,role,user,p['member']); handle=p.get('handle','')
-        if handle and not re.fullmatch(r'[A-Za-z0-9_]{1,25}',handle): raise Invalid('Invalid Twitch handle')
+        if handle and not re.fullmatch(r'[A-Za-z0-9_]{1,25}',handle):
+            raise Invalid('Invalid Twitch handle')
         m.data['twitch']=handle; m.save(); return public(m)
     require(role)
     if action=='roster_fetch':
@@ -45,21 +49,26 @@ def handle(g,action,p,role,user):
         require(role,'owner'); url=text(p['url'],'guild page URL',2000); names=fetch_roster(url); g.config.setdefault('sync',{})['url']=url; g.save(); return {'names':names,'source_saved':True}
     if action=='roster_preview':
         names=roster_html(text(p['html'],'roster HTML',1000000))
-        if not names: raise Invalid('No member links recognized. No roster changes were made.')
+        if not names:
+            raise Invalid('No member links recognized. No roster changes were made.')
         return {'names':names,'requires_confirmation':True}
     if action=='streams_fixture':
         streams=p['streams']
-        if not isinstance(streams,list): raise Invalid('Streams must be a list')
+        if not isinstance(streams,list):
+            raise Invalid('Streams must be a list')
         clean=[]
         for stream in streams: clean.append({'handle':text(stream['handle'],maximum=25),'title':text(stream['title']),'viewers':integer(stream['viewers'],'viewers'),'category':str(stream.get('category','BDO')),'partner':bool(stream.get('partner',False))})
         return public(save(g,'streams',{'items':clean,'source':'fixture','at':now()},'current'))
     if action=='streams_refresh':
-        if g.config.get('integrations',{}).get('twitch') is False:raise Invalid('Twitch is disabled in guild settings')
+        if g.config.get('integrations',{}).get('twitch') is False:
+            raise Invalid('Twitch is disabled in guild settings')
         client=os.getenv('TWITCH_CLIENT_ID'); token=os.getenv('TWITCH_ACCESS_TOKEN')
-        if not client or not token: raise Invalid('Set TWITCH_CLIENT_ID and TWITCH_ACCESS_TOKEN, or use the local stream fixture')
+        if not client or not token:
+            raise Invalid('Set TWITCH_CLIENT_ID and TWITCH_ACCESS_TOKEN, or use the local stream fixture')
         headers={'Client-Id':client,'Authorization':'Bearer '+token}
         response=httpx.get('https://api.twitch.tv/helix/streams',params={'game_id':'386821','first':100},headers=headers,timeout=15)
-        if response.status_code==429: raise Invalid('Twitch rate limit reached; retry later')
+        if response.status_code==429:
+            raise Invalid('Twitch rate limit reached; retry later')
         response.raise_for_status()
         data=response.json()['data']; partner_logins=set()
         if data:
@@ -75,7 +84,8 @@ def handle(g,action,p,role,user):
 
 def paired_scores(texts):
     """Read cropped names and K/D columns; mismatch is an error, never a guess."""
-    if len(texts)%2 or not 2<=len(texts)<=10:raise Invalid('Supply 1–5 pairs: names image followed by kills/deaths image')
+    if len(texts)%2 or not 2<=len(texts)<=10:
+        raise Invalid('Supply 1–5 pairs: names image followed by kills/deaths image')
     output=[]
     for i in range(0,len(texts),2):
         names=[line.strip() for line in texts[i].splitlines() if line.strip() and line.strip().casefold() not in ['name','names','family','family name']]
@@ -84,9 +94,11 @@ def paired_scores(texts):
             line=line.strip()
             if not line or re.search(r'kills|deaths',line,re.I):continue
             match=re.fullmatch(r'([\d,]+)\s+([\d,]+)',line)
-            if not match:raise Invalid('Unrecognized score row. Crop to two numeric columns or enter CSV manually.')
+            if not match:
+                raise Invalid('Unrecognized score row. Crop to two numeric columns or enter CSV manually.')
             scores.append([int(v.replace(',','')) for v in match.groups()])
-        if len(names)!=len(scores) or not names:raise Invalid('Names and scores have different row counts. Crop aligned panels and retry.')
+        if len(names)!=len(scores) or not names:
+            raise Invalid('Names and scores have different row counts. Crop aligned panels and retry.')
         output.extend({'name':name,'kills':score[0],'deaths':score[1]} for name,score in zip(names,scores))
     return output
 
@@ -100,9 +112,12 @@ def gear_numbers(texts):
 def fetch_roster(url):
     from urllib.parse import urlparse
     parsed=urlparse(url)
-    if parsed.scheme!='https' or parsed.hostname not in {'www.naeu.playblackdesert.com','www.sea.playblackdesert.com','www.tr.playblackdesert.com','www.jp.playblackdesert.com','www.kr.playblackdesert.com','www.tw.playblackdesert.com'} or parsed.username or parsed.port not in (None,443):raise Invalid('Use an official regional Black Desert HTTPS guild page')
+    if parsed.scheme!='https' or parsed.hostname not in {'www.naeu.playblackdesert.com','www.sea.playblackdesert.com','www.tr.playblackdesert.com','www.jp.playblackdesert.com','www.kr.playblackdesert.com','www.tw.playblackdesert.com'} or parsed.username or parsed.port not in (None,443):
+        raise Invalid('Use an official regional Black Desert HTTPS guild page')
     response=httpx.get(url,timeout=15,follow_redirects=False)
-    if response.status_code==429:raise Invalid('BDO rate limit reached. No roster changes made.')
+    if response.status_code==429:
+        raise Invalid('BDO rate limit reached. No roster changes made.')
     response.raise_for_status();names=roster_html(response.text)
-    if not names:raise Invalid('No roster recognized. No members were changed.')
+    if not names:
+        raise Invalid('No roster recognized. No members were changed.')
     return names

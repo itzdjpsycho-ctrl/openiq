@@ -155,6 +155,10 @@ Twitch uses `TWITCH_CLIENT_ID` and `TWITCH_ACCESS_TOKEN`; without them the demo 
 
 ## Verification
 
+Install `requirements-dev.txt`, Tesseract, Node, Chromium (`python -m playwright install chromium`) and the pinned accessibility tool (`npm ci`). Run the complete offline gate with `python scripts/release_gate.py`; it uses disposable data and emits `release-report.json`. Docker Compose is required for configuration validation (a standalone executable can be supplied with `--compose PATH`). Live-host checks remain separate.
+
+Individual checks:
+
 ```bash
 .venv/bin/python manage.py test
 .venv/bin/python manage.py check

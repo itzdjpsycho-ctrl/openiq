@@ -9,7 +9,7 @@ from .management.commands.bot_diagnostics import permissions_for
 
 class BotDiagnosticsTests(TestCase):
     def test_read_only_report_and_missing_permissions(self):
-        g=Guild.objects.create(name='Diagnostics',server_id='100',config={'channels':{'bot':'300'},'welcome':{'role_ids':{'Raider':'400'}}})
+        g=Guild.objects.create(name='Diagnostics',server_id='100',config={'channels':{'bot':'300','unused':''},'welcome':{'role_ids':{'Raider':'400'}}})
         values=[{'id':'200'},{'id':'500'},{'id':'100'}, {'user':{'id':'200'},'roles':['600']},
                 [{'id':'600','position':10,'permissions':str((1<<28)|(1<<10)|(1<<11)|(1<<14)|(1<<16))},{'id':'400','position':1,'permissions':'0'}],
                 [{'id':'300','permission_overwrites':[{'id':'200','type':1,'allow':'0','deny':str(1<<11)}]}],
@@ -24,7 +24,7 @@ class BotDiagnosticsTests(TestCase):
             client.post.assert_not_called();client.put.assert_not_called();client.patch.assert_not_called()
         report=json.loads(output.getvalue());checks=report['guilds'][0]['checks']
         self.assertTrue(checks['welcome_roles']['Raider']);self.assertFalse(checks['channels']['bot']['send'])
-        self.assertEqual(checks['missing_commands'],[]);self.assertNotIn('secret',output.getvalue())
+        self.assertNotIn('unused',checks['channels']);self.assertEqual(checks['missing_commands'],[]);self.assertNotIn('secret',output.getvalue())
 
     def test_requires_token_and_administrator_overrides(self):
         with patch.dict('os.environ',{'DISCORD_BOT_TOKEN':''}),self.assertRaises(CommandError):call_command('bot_diagnostics')

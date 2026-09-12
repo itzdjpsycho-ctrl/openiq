@@ -14,7 +14,8 @@ from .catalog import ACTIONS
 @login_required
 def index(request):
     guilds=Guild.objects.filter(access__user=request.user).order_by('name')
-    if not guilds.exists():return redirect('/onboard/')
+    if not guilds.exists():
+        return redirect('/onboard/')
     return render(request,'dashboard.html',{'guilds':guilds,'actions':ACTIONS})
 
 @login_required
@@ -54,17 +55,20 @@ def action(request,guild_id,module,name):
 @require_POST
 def ocr_view(request,guild_id):
     role=access(request.user,guild_id)
-    if role=='member' and request.POST.get('mode')!='gear': raise PermissionDenied()
+    if role=='member' and request.POST.get('mode')!='gear':
+        raise PermissionDenied()
     try:
         files=request.FILES.getlist('images')
         if getattr(request,'upload_too_large',False) or sum(f.size for f in files)>12*1024*1024:
             return JsonResponse({'error':'Combined images exceed 12 MiB'},status=413)
-        if not files or len(files)>10: raise Invalid('Choose 1–10 images')
+        if not files or len(files)>10:
+            raise Invalid('Choose 1–10 images')
         import time
         deadline=time.monotonic()+45;texts=[]
         for file in files:
             remaining=deadline-time.monotonic()
-            if remaining<=0:raise Invalid('OCR request exceeded its processing budget')
+            if remaining<=0:
+                raise Invalid('OCR request exceeded its processing budget')
             texts.append(integrations.ocr(file.read(),timeout=remaining))
         result={'texts':texts,'review_required':True}
         if request.POST.get('mode')=='gear':result['gear']=integrations.gear_numbers(texts)
@@ -116,9 +120,11 @@ def ally_event(request,token):
     from .modules.alliances import visible
     from django.http import Http404
     e=next((r for r in Record.objects.filter(kind='event') if r.data.get('alliance_share') and r.data.get('share_token')==str(token)),None)
-    if not e:raise Http404()
+    if not e:
+        raise Http404()
     accessible=set(Guild.objects.filter(access__user=request.user).values_list('id',flat=True))
-    if e.guild_id not in accessible and not any(a.data['status']=='active' and accessible.intersection(map(int,a.data['guilds'])) for a in visible(e.guild)):raise PermissionDenied()
+    if e.guild_id not in accessible and not any(a.data['status']=='active' and accessible.intersection(map(int,a.data['guilds'])) for a in visible(e.guild)):
+        raise PermissionDenied()
     from .modules.core import rows
     names={m.key:m.data['name'] for m in rows(e.guild,'member')}
     return render(request,'ally_event.html',{'event':e.data,'guild':e.guild.name,'signups':[{**s,'name':names.get(s['member'],'Unknown')} for s in e.data['signups']]})
@@ -136,12 +142,14 @@ def recover(request):
         if not settings.ALLOW_LOCAL_LOGIN:
             from .discord_auth import can_manage_server,synchronize
             tokens=request.session.get('discord_tokens')
-            if not tokens or not request.user.username.startswith('discord_'):raise PermissionDenied('Discord login is required for guild recovery')
+            if not tokens or not request.user.username.startswith('discord_'):
+                raise PermissionDenied('Discord login is required for guild recovery')
             import httpx
             try:servers=synchronize(request.user,tokens['access'])
             except (httpx.HTTPError,KeyError,ValueError,TypeError):raise PermissionDenied('Discord authority could not be verified')
             request.session['discord_guilds']=servers
-            if not any(server['id']==server_id and can_manage_server(server) for server in servers):raise PermissionDenied('Manage Guild permission is required on the destination Discord server')
+            if not any(server['id']==server_id and can_manage_server(server) for server in servers):
+                raise PermissionDenied('Manage Guild permission is required on the destination Discord server')
         with transaction.atomic():
             g=get_object_or_404(Guild,pk=p['guild'])
             from django.db.models import F
