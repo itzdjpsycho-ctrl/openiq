@@ -10,10 +10,12 @@ A local guild-management prototype for Black Desert guilds. Django + SQLite powe
 
 ```bash
 cd /home/user/src/openiq
+cp .env.example .env
+# Configure Discord OAuth, ALLOWED_HOSTS, CSRF_TRUSTED_ORIGINS and your TLS proxy.
 docker compose up --build -d
 ```
 
-Open **http://127.0.0.1:8765/** and sign in through Discord. Normal member
+Open your configured **HTTPS address** and sign in through Discord. Normal member
 login is Discord-only. The `openiq-data` named volume persists the database and
 signing key across container replacement. Existing host data is not copied into
 the image or container.
@@ -23,7 +25,7 @@ the image or container.
 docker compose ps
 docker compose logs --tail=100 web
 
-# Enable the optional continuous scheduler (notifications remain previews).
+# Enable the optional continuous scheduler (delivery follows its explicit switch).
 docker compose --profile jobs up -d
 
 # Start the Discord bot after setting its token and enabling delivery in .env.
@@ -38,14 +40,15 @@ For Docker without Compose:
 ```bash
 docker build -t openiq:local .
 docker run -d --name openiq -p 127.0.0.1:8765:8000 \
-  -v openiq-data:/data -e SEED_DEMO=1 openiq:local
+  -v openiq-data:/data --env-file .env openiq:local
 ```
 
 The application runs as UID 10001, includes Tesseract and uses Gunicorn/WhiteNoise to serve the app and static assets. It does not require a host Python installation. `.dockerignore` excludes the host database, signing key, environment files, Git metadata, virtual environment and screenshots.
 
 Copy `.env.example` to `.env` to customize the deployment. Set the Discord OAuth
 variables before normal use. `ALLOW_LOCAL_LOGIN=1` exposes the password form for
-development fixtures only; leave it disabled for a guild installation. `HTTPS=1`
+development fixtures only (also set `DEBUG=1`, `HTTPS=0`, and an explicit demo
+password if enabling `SEED_DEMO=1`); leave it disabled for a guild installation. `HTTPS=1`
 enables secure cookies and HTTPS redirects when deployed behind TLS; set
 `TRUST_PROXY=1` only for a trusted reverse proxy that controls forwarded headers.
 

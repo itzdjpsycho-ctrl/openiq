@@ -37,6 +37,7 @@ HTTPS = os.getenv('HTTPS','0') == '1'
 SESSION_COOKIE_SECURE = HTTPS
 CSRF_COOKIE_SECURE = HTTPS
 SECURE_SSL_REDIRECT = HTTPS
+SECURE_REDIRECT_EXEMPT = [r'^healthz/$', r'^readyz/$']
 CSRF_TRUSTED_ORIGINS = [x for x in os.getenv('CSRF_TRUSTED_ORIGINS','').split(',') if x]
 if os.getenv('TRUST_PROXY','0') == '1':
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO','https')

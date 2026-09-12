@@ -130,10 +130,13 @@ live installation checks remain outstanding.
   native snapshot/restore tests pass. Client/server version requirements and
   SQLite transfer are documented in DATABASES.md.
 
-- [ ] **OPS-01 — Production environment contract.** Supply every required and
+- [x] **OPS-01 — Production environment contract.** Supply every required and
   optional environment variable through Compose, validate unsafe/missing values
   at startup, disable demo data by default, and provide a deployment-oriented
   example file without secrets.
+  Compose shares persistent-key/runtime settings, exposes optional Twitch/Ollama
+  settings, disables demo seeding by default, and validates the environment before
+  startup. Production OAuth and invalid boolean/delivery configurations are tested.
 - [x] **OPS-02 — Consistent backup command.** Create timestamped SQLite backups
   using SQLite's online backup API, include the signing key and a manifest, and
   support a retention count without stopping the services.
