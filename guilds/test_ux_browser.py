@@ -248,6 +248,9 @@ class DashboardUXTests(StaticLiveServerTestCase):
                 page.context.add_cookies([{'name':'sessionid','value':self.client.cookies['sessionid'].value,'url':self.live_server_url}])
                 page.goto(self.live_server_url)
                 page.wait_for_selector('#nav button')
+                from pathlib import Path
+                page.add_script_tag(path=str(Path(__file__).resolve().parents[1]/'node_modules/axe-core/axe.min.js'))
+                self.assertFalse(errors)
                 for width in (390,1280):
                     page.set_viewport_size({'width':width,'height':844})
                     for section in page.locator('#nav button').all_text_contents():
@@ -256,6 +259,19 @@ class DashboardUXTests(StaticLiveServerTestCase):
                         self.assertTrue(page.locator('#panel').inner_text().strip(),section)
                         self.assertTrue(page.evaluate('document.documentElement.scrollWidth<=innerWidth'),section)
                         self.assertEqual(page.evaluate('document.activeElement.textContent'),section)
+                        violations=page.evaluate("async () => (await axe.run(document, {runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))")
+                        self.assertFalse(violations, section+': '+str(violations))
+                # Inspect the accessibility tree and every available action dialog.
+                page.set_viewport_size({'width':390,'height':844})
+                actions=page.evaluate('state.actions.map(a=>({module:a.module,action:a.action,label:a.label}))')
+                for action in actions:
+                    page.evaluate('(a)=>openAction(state.actions.find(x=>x.module===a.module && x.action===a.action))',action)
+                    self.assertIn('dialog',page.get_by_role('dialog').aria_snapshot())
+                    violations=page.evaluate("async () => (await axe.run(document, {runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))")
+                    self.assertFalse(violations,action['label']+': '+str(violations))
+                    self.assertTrue(page.evaluate('document.querySelector("#dialog").scrollWidth<=document.querySelector("#dialog").clientWidth'),action['label'])
+                    page.keyboard.press('Escape')
+                    self.assertFalse(page.get_by_role('dialog').is_visible())
                 before=page.locator('#panel').inner_text()
                 page.route('**/state/**',lambda route:route.fulfill(status=503,body='Unavailable'))
                 page.get_by_role('button',name='Refresh',exact=False).click()

@@ -16,3 +16,4 @@ coverage.json
 backups/
 .capture-token
 .heartbeat-*.json
+node_modules/

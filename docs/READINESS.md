@@ -265,6 +265,13 @@ this work builds on the contributor's existing forms and browser checks.
   - [ ] **UX-04b: Full accessibility and mobile verification.** Complete the
     section-by-section keyboard, labels, contrast, narrow-layout, and
     screen-reader checks for dynamic workflows.
+    - [x] All sections at 390px/1280px and all available action dialogs pass
+      automated axe WCAG A/AA checks, keyboard navigation/dismissal and layout
+      checks. Scrollable tables are named and keyboard-focusable; refresh/save
+      feedback has status/alert semantics and accessibility-tree coverage.
+    - [ ] A person using a screen reader must verify spoken announcements and
+      workflow usability during guild acceptance; automated ARIA checks cannot
+      establish that experience.
 - [ ] **UX-05 — Guild-cluster boundaries.** Test two BDO guilds on one Discord
   server and allied guilds in separate servers without data or permission leakage.
 - [ ] **DOC-01 — Production runbook.** Document Discord application creation, OAuth
