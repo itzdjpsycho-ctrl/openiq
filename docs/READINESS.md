@@ -272,8 +272,10 @@ this work builds on the contributor's existing forms and browser checks.
     - [ ] A person using a screen reader must verify spoken announcements and
       workflow usability during guild acceptance; automated ARIA checks cannot
       establish that experience.
-- [ ] **UX-05 — Guild-cluster boundaries.** Test two BDO guilds on one Discord
+- [x] **UX-05 — Guild-cluster boundaries.** Test two BDO guilds on one Discord
   server and allied guilds in separate servers without data or permission leakage.
+  Shared-server role/autocomplete isolation, HTTP mutation denial, limited allied
+  roster visibility, private-record exclusion and revocation after leaving pass.
 - [ ] **DOC-01 — Production runbook.** Document Discord application creation, OAuth
   redirect, bot install permissions, first-run setup, backups, upgrade, recovery,
   diagnostics, and shutdown.
