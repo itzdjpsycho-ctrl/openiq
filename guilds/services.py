@@ -37,5 +37,5 @@ def execute(user,guild_id,module,action,payload):
         event=Record.objects.filter(guild=g,kind='event',key=str(result['id'])).first()
         if event and Outbox.objects.filter(guild=g,key=f'{g.pk}:event:{event.key}').exists():
             MODULES['community'].handle(g,'post_event',{'event':event.key},'admin',user)
-    if g.pk: Audit.objects.create(guild=g,actor=user.username,action=module+'.'+action,data={'result_id':result.get('id')} if isinstance(result,dict) else {})
+    if g.pk: Audit.objects.create(guild=g,actor='privacy-request' if module=='privacy' and action in ('anonymize','delete') else user.username,action=module+'.'+action,data={'result_id':result.get('id')} if isinstance(result,dict) else {})
     return result

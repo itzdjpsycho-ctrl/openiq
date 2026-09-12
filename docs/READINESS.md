@@ -204,8 +204,11 @@ live installation checks remain outstanding.
   Catalog and internal HTTP actions plus every command have anonymous/lower-role
   denial coverage. Existing owner/member lifecycle and signed component regressions
   cover admitted behavior; private record and unrelated guild directory leaks are closed.
-- [ ] **SEC-06 — Privacy controls.** Document stored Discord/game data and provide
+- [x] **SEC-06 — Privacy controls.** Document stored Discord/game data and provide
   guild-member export, unlink, anonymization, and deletion workflows.
+  My Stats exposes scoped self-service controls; officers can act for a member.
+  Deletion removes membership/identifiers and owned private records while keeping
+  anonymous finalized scores. Other guild memberships remain intact. Tests pass.
 
 ## 6. Product completion and operator experience
 

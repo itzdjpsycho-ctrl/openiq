@@ -95,3 +95,6 @@ for action in ACTIONS:
     if action['module']=='operations' and action['action']=='challenge':action['role']='member'
 
 ACTIONS += [a('coaching','notify','Preview lead notification',[f('assignment','Assignment','assignment')])]
+ACTIONS += [a('privacy','export','Export member data',[MEM],'member'),a('privacy','unlink','Unlink member identity',[MEM],'member'),
+            a('privacy','anonymize','Anonymize member',[MEM,f('confirmation','Type the member name')],'member'),
+            a('privacy','delete','Delete membership and identifying data',[MEM,f('confirmation','Type the member name')],'member')]
