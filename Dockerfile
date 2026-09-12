@@ -10,7 +10,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends tesseract-ocr fonts-dejavu-core libpcap0.8 \
+    && apt-get install -y --no-install-recommends tesseract-ocr fonts-dejavu-core libpcap0.8 postgresql-client \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 openiq \
     && useradd --uid 10001 --gid openiq --create-home openiq \

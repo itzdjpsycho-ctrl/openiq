@@ -22,7 +22,7 @@ def execute(user,guild_id,module,action,payload):
     if module not in MODULES: raise Invalid('Unknown module')
     if not isinstance(payload,dict): raise Invalid('Payload must be an object')
     result=MODULES[module].handle(g,action,payload,role,user)
-    if before_wars is not None:
+    if before_wars is not None and g.pk:
         from .modules.core import save,now
         after_wars={r.key:r.data for r in Record.objects.filter(guild=g,kind='war')}
         for key in before_wars.keys()|after_wars.keys():

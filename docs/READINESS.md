@@ -124,8 +124,11 @@ live installation checks remain outstanding.
   snapshot operations behind adapters; preserve Django ORM for domain queries,
   SQLite defaults, and shared Compose settings. PostgreSQL configuration and
   custom adapter registration are tested without a server.
-- [ ] **DB-02 — PostgreSQL integration.** Add a locked driver, migration/concurrency
+- [x] **DB-02 — PostgreSQL integration.** Add a locked driver, migration/concurrency
   tests on PostgreSQL, native snapshot/restore, and a SQLite data-transfer runbook.
+  psycopg is pinned; real PostgreSQL 17.11 migration, concurrent mutation and
+  native snapshot/restore tests pass. Client/server version requirements and
+  SQLite transfer are documented in DATABASES.md.
 
 - [ ] **OPS-01 — Production environment contract.** Supply every required and
   optional environment variable through Compose, validate unsafe/missing values
