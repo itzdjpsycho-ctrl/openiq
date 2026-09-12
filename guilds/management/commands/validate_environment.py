@@ -31,6 +31,7 @@ def problems(env,debug,service='web'):
         if key in env and (not env[key].isdecimal() or int(env[key])>63072000):errors.append(key+' must be an integer from 0 to 63072000')
     for key in ('RATE_LIMIT_OAUTH','RATE_LIMIT_RECOVERY','RATE_LIMIT_OCR','RATE_LIMIT_MUTATION'):
         if key in env and (not env[key].isdecimal() or not 1<=int(env[key])<=1000000):errors.append(key+' must be a positive integer up to 1000000')
+    if 'SESSION_MAX_AGE' in env and (not env['SESSION_MAX_AGE'].isdecimal() or not 60<=int(env['SESSION_MAX_AGE'])<=604800):errors.append('SESSION_MAX_AGE must be from 60 seconds to 7 days')
     if set(filter(None,env.get('REQUIRED_PROCESSES','').split(',')))-{'bot','scheduler'}:errors.append('REQUIRED_PROCESSES supports scheduler and bot only')
     if env.get('DISCORD_CLIENT_ID') and not env['DISCORD_CLIENT_ID'].isdecimal():errors.append('DISCORD_CLIENT_ID must be numeric')
     if env.get('DISCORD_SYNC_GUILD') and not env['DISCORD_SYNC_GUILD'].isdecimal():errors.append('DISCORD_SYNC_GUILD must be numeric')

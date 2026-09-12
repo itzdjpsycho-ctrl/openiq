@@ -37,6 +37,8 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = int(os.getenv('SESSION_MAX_AGE','28800'))
+SESSION_SAVE_EVERY_REQUEST = False
 SESSION_COOKIE_SAMESITE = 'Lax'
 HTTPS = os.getenv('HTTPS','0') == '1'
 SESSION_COOKIE_SECURE = HTTPS
@@ -55,3 +57,9 @@ if os.getenv('TRUST_PROXY','0') == '1':
 if not DEBUG:
     STORAGES = {'default':{'BACKEND':'django.core.files.storage.FileSystemStorage'},'staticfiles':{'BACKEND':'whitenoise.storage.CompressedManifestStaticFilesStorage'}}
 DATA_UPLOAD_MAX_MEMORY_SIZE = 12*1024*1024
+LOGGING = {'version':1,'disable_existing_loggers':False,
+           'filters':{'credentials':{'()':'guilds.session_security.RedactCredentials'}},
+           'handlers':{'console':{'class':'logging.StreamHandler','filters':['credentials']}},
+           'root':{'handlers':['console'],'level':'WARNING'},
+           'loggers':{'django.server':{'handlers':['console'],'level':'INFO','propagate':False},
+                      'django':{'handlers':['console'],'level':'WARNING','propagate':False}}}

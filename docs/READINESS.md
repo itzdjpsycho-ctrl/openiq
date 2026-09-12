@@ -187,9 +187,12 @@ live installation checks remain outstanding.
   retry responses.
   Database-backed per-minute budgets cover OAuth, recovery, OCR and mutations
   across workers/restarts. Responses include Retry-After; identity keys are hashed.
-- [ ] **SEC-03 — Session and secret hygiene.** Define session lifetime, rotate
+- [x] **SEC-03 — Session and secret hygiene.** Define session lifetime, rotate
   sessions at login, clear Discord tokens at logout, redact credentials from
   errors/logs, and document secret rotation.
+  Logins set an absolute expiry and clear prior Discord state; logout flushes
+  the server session. Logs redact credentials/callback codes, and Gunicorn logs
+  omit query strings. Rotation and logout regressions pass.
 - [ ] **SEC-04 — Upload hardening.** Enforce content signatures, decoded dimensions,
   processing timeouts, temporary-file cleanup, and aggregate request limits for
   OCR inputs.
