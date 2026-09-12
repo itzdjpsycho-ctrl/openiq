@@ -54,6 +54,7 @@ def handle(g,action,p,role,user):
         for stream in streams: clean.append({'handle':text(stream['handle'],maximum=25),'title':text(stream['title']),'viewers':integer(stream['viewers'],'viewers'),'category':str(stream.get('category','BDO')),'partner':bool(stream.get('partner',False))})
         return public(save(g,'streams',{'items':clean,'source':'fixture','at':now()},'current'))
     if action=='streams_refresh':
+        if g.config.get('integrations',{}).get('twitch') is False:raise Invalid('Twitch is disabled in guild settings')
         client=os.getenv('TWITCH_CLIENT_ID'); token=os.getenv('TWITCH_ACCESS_TOKEN')
         if not client or not token: raise Invalid('Set TWITCH_CLIENT_ID and TWITCH_ACCESS_TOKEN, or use the local stream fixture')
         headers={'Client-Id':client,'Authorization':'Bearer '+token}

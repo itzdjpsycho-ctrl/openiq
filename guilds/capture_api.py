@@ -18,9 +18,10 @@ from django.core.exceptions import PermissionDenied
 
 def pair(user,guild,session):
     require(access(user,guild));record=get(guild,'session',session)
+    if not guild.config.get('capture',{}).get('enabled',True):raise Invalid('Capture is disabled in guild settings')
     if record.data['status']!='live':raise Invalid('Session is stopped')
     token=secrets.token_urlsafe(32)
-    save(guild,'capture_token',{'digest':hashlib.sha256(token.encode()).hexdigest(),'user':user.pk,'expires':time.time()+86400},session)
+    save(guild,'capture_token',{'digest':hashlib.sha256(token.encode()).hexdigest(),'user':user.pk,'expires':time.time()+3600*guild.config.get('capture',{}).get('token_hours',24)},session)
     return token
 
 
@@ -36,6 +37,7 @@ def ingest(request,guild_id,session):
         if not credential or credential.data['expires']<=time.time() or not constant_time_compare(credential.data['digest'],hashlib.sha256(token.encode()).hexdigest()):
             return JsonResponse({'error':'Invalid or expired capture credential'},status=401)
         try:
+            if not credential.guild.config.get('capture',{}).get('enabled',True):raise PermissionDenied()
             if len(request.body)>1024*1024:return JsonResponse({'error':'Capture batch exceeds 1 MiB'},status=413)
             payload=json.loads(request.body)
             user=User.objects.get(pk=credential.data['user'])
@@ -45,7 +47,7 @@ def ingest(request,guild_id,session):
             record.data['capture_last_seen']=now()
             diagnostics=record.data.setdefault('capture_diagnostics',[])
             diagnostics.append({'at':record.data['capture_last_seen'],'added':result['added'],'received':len(payload['events'])})
-            record.data['capture_diagnostics']=diagnostics[-50:];record.save()
+            record.data['capture_diagnostics']=diagnostics[-credential.guild.config.get('capture',{}).get('diagnostic_entries',50):];record.save()
             return JsonResponse({'ok':True,**result})
         except (Invalid,KeyError,TypeError,ValueError):return JsonResponse({'error':'Invalid capture batch or stopped session'},status=400)
         except (PermissionDenied,User.DoesNotExist):return JsonResponse({'error':'Capture access revoked'},status=403)

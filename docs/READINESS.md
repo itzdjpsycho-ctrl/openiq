@@ -221,9 +221,11 @@ with three browser regressions. The unchecked parent items below retain their
 remaining scope. The user authorized completion of the remaining tasks here;
 this work builds on the contributor's existing forms and browser checks.
 
-- [ ] **UX-01 — Complete settings forms (reserved for UX contributor).** Replace remaining raw nested settings
+- [x] **UX-01 — Complete settings forms.** Replace remaining raw nested settings
   edits with validated forms for roles, channels, tickets, recruitment, schedules,
   capture, retention, and integrations.
+  Typed server validation and owner forms cover the remaining nested settings.
+  Chromium verifies capture error recovery, retention/integration saves and reload.
   - [x] **UX-01a: Editable schedule forms.** Show weekly/sync summaries, load
     existing settings, use weekday names, validate hour/timezone input, and
     preserve unrelated settings. Browser regression verifies save and recovery.
@@ -234,16 +236,18 @@ this work builds on the contributor's existing forms and browser checks.
     event, and coaching channels with ID validation, explicit blank defaults,
     and preservation of unrelated settings. Browser regression covers saves
     and validation recovery.
-- [ ] **UX-02 — Setup and integration status (reserved for UX contributor).** Show Discord bot, OAuth, Twitch,
+- [x] **UX-02 — Setup and integration status.** Show Discord bot, OAuth, Twitch,
   capture, scheduler, backup, and delivery status with actionable diagnostics.
-- [ ] **UX-03 — Empty/error/loading states (reserved for UX contributor).** Make every dashboard section usable
+  Settings distinguishes configured providers, process heartbeats, received capture
+  batches and queued delivery, with operator next steps and no credential exposure.
+- [ ] **UX-03 — Empty/error/loading states.** Make every dashboard section usable
   with no demo data and preserve entered values after validation failures.
   - [x] **UX-03a: Shared table and form feedback.** Explain empty tables, show
     saving state, prevent duplicate submission/dismissal while pending, retain
     entered values on failure, and focus the error for correction.
   - [ ] **UX-03b: Section-specific states.** Verify every dashboard section with
     no demo data and complete its empty, error, and loading states.
-- [ ] **UX-04 — Accessibility and mobile pass (reserved for UX contributor).** Verify keyboard operation, focus,
+- [ ] **UX-04 — Accessibility and mobile pass.** Verify keyboard operation, focus,
   labels, contrast, reduced motion, narrow layouts, and screen-reader announcements
   for dynamic workflows.
   - [x] **UX-04a: Shared accessibility and mobile improvements.** Name guild/action
@@ -258,7 +262,7 @@ this work builds on the contributor's existing forms and browser checks.
   - [ ] **UX-04b: Full accessibility and mobile verification.** Complete the
     section-by-section keyboard, labels, contrast, narrow-layout, and
     screen-reader checks for dynamic workflows.
-- [ ] **UX-05 — Guild-cluster boundaries (reserved for UX contributor).** Test two BDO guilds on one Discord
+- [ ] **UX-05 — Guild-cluster boundaries.** Test two BDO guilds on one Discord
   server and allied guilds in separate servers without data or permission leakage.
 - [ ] **DOC-01 — Production runbook.** Document Discord application creation, OAuth
   redirect, bot install permissions, first-run setup, backups, upgrade, recovery,

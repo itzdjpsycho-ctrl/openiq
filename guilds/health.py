@@ -6,10 +6,10 @@ from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
 
-def heartbeat(process,ready=True):
+def heartbeat(process,ready=True,max_age=120):
     destination=settings.DATA_DIR/('.heartbeat-'+process+'.json')
     with tempfile.NamedTemporaryFile(mode='w',dir=settings.DATA_DIR,delete=False,encoding='utf-8') as stream:
-        temporary=Path(stream.name);json.dump({'at':time.time(),'ready':ready},stream)
+        temporary=Path(stream.name);json.dump({'at':time.time(),'ready':ready,'max_age':max_age},stream)
     try:temporary.chmod(0o600);os.replace(temporary,destination)
     finally:temporary.unlink(missing_ok=True)
 

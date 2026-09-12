@@ -5,6 +5,7 @@ from pathlib import Path
 
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
+from guilds.health import heartbeat
 
 
 class Command(BaseCommand):
@@ -28,7 +29,9 @@ class Command(BaseCommand):
                 try:
                     call_command('backup', output=options['output'], keep=options['keep'],
                                  timeout=options['timeout'], stdout=self.stdout)
+                    heartbeat('backup',max_age=options['interval']+options['timeout']+60)
                 except Exception:
+                    heartbeat('backup',False)
                     # Do not print exception text: backend errors can contain credentials.
                     self.stderr.write('Backup failed; check storage, permissions and database configuration. Retrying next interval.')
                 stop.wait(options['interval'])
