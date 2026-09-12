@@ -164,6 +164,14 @@ Browser checks use optional `playwright` (`pip install -r requirements-dev.txt`,
 
 ## Configuration and data
 
+Owners can set `retention` through the settings API with `capture_days`,
+`import_days`, `recap_days`, and `summary_days` (0 disables expiry). Preview with
+`python manage.py retention --guild ID`; add `--apply` to clear expired server
+capture events/import rows, revoke public recaps and expire retained summaries.
+Age is measured from record creation. Live sessions and finalized wars are
+preserved. OCR upload images are processed in memory and not retained. Capture
+source files on separate machines require their own operator cleanup policy.
+
 Officers can choose **Export war package** in History to download the war,
 participant identities, linked records and correction history. The equivalent CLI
 is `python manage.py export_war --guild ID --war WAR_ID --user OFFICER --output war.json`.

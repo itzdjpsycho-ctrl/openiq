@@ -112,8 +112,11 @@ live installation checks remain outstanding.
   retain an audit trail when finalized participant scores or metadata are edited.
   Officer exports include linked events, captures, imports and before/after
   corrections. Regression checks cover edits, deletion history and member denial.
-- [ ] **WAR-09 — Retention controls.** Configure retention for raw captures, OCR
+- [x] **WAR-09 — Retention controls.** Configure retention for raw captures, OCR
   uploads, public recaps, and derived summaries without deleting finalized wars.
+  Owner retention settings control saved capture events, extracted import rows,
+  public links and retained summaries. The preview-first `retention` command
+  preserves live sessions and finalized wars. Uploaded OCR images are not stored.
 
 ## 4. Self-hosted operations and data safety
 

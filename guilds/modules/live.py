@@ -32,6 +32,7 @@ def handle(g,action,p,role,user):
     s.save(); return public(s)
 
 def summarize(s):
+    if not s.data.get('events') and s.data.get('retained_summary'):return s.data['retained_summary']
     enemies=defaultdict(lambda:{'kills':0,'deaths':0,'players':{},'classes':{}}); buckets=defaultdict(lambda:{'kills':0,'deaths':0}); k=d=0
     for e in s.data['events']:
         field='kills' if e['kind']=='kill' else 'deaths'; k+=field=='kills'; d+=field=='deaths'; en=enemies[e['guild']]; en[field]+=1; name=e['target'] if e['kind']=='kill' else e['player']; en['players'].setdefault(name,{'kills':0,'deaths':0})[field]+=1; en['classes'][e['class']]=en['classes'].get(e['class'],0)+1; buckets[e['at'][:16]][field]+=1
