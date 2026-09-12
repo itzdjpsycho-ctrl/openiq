@@ -76,9 +76,12 @@ live installation checks remain outstanding.
     Discord and the local database: ambiguous missing-message outcomes require
     operator reconciliation. Validate this behavior in the staging guild before
     accepting the delivery guarantee.
-- [ ] **BOT-10 — Bot diagnostics.** Add an operator command/check that verifies
+- [x] **BOT-10 — Bot diagnostics.** Add an operator command/check that verifies
   token validity, guild installation, intents, channel access, role hierarchy,
   and command registration without sending messages.
+  `python manage.py bot_diagnostics --guild ID` reports installation, channel
+  overwrites, welcome hierarchy, required intents and missing commands using GET
+  requests only. Token failures are redacted; offline diagnostics tests pass.
 
 ## 3. War management end to end
 

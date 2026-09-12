@@ -109,6 +109,9 @@ No Discord messages have been sent. No bot has been connected.
 # All 53 documented commands are constructed without a network connection.
 .venv/bin/python manage.py runbot --check
 
+# Read-only remote checks; requires the bot token but sends no messages.
+.venv/bin/python manage.py bot_diagnostics --guild 1
+
 # Exercise commands locally.
 .venv/bin/python manage.py local_command guildstats --guild 1 --user demo
 .venv/bin/python manage.py local_command 'reminder list' --guild 1 --user member
