@@ -105,6 +105,9 @@ live installation checks remain outstanding.
   acknowledgements, last-seen and 50-entry diagnostics have offline regressions.
 - [ ] **WAR-07 — Import compatibility report.** Validate all supported synthetic
   CSV/OCR/IKUSA/JSONL inputs from one command and produce a clear operator report.
+  - [x] `verify_imports` reports all four formats and exits nonzero on failure;
+    report regressions and real CSV/IKUSA/JSONL fixture checks pass.
+  - [ ] Run the real OCR fixture gate on a machine with Tesseract installed.
 - [ ] **WAR-08 — Export and correction history.** Export a complete war package and
   retain an audit trail when finalized participant scores or metadata are edited.
 - [ ] **WAR-09 — Retention controls.** Configure retention for raw captures, OCR

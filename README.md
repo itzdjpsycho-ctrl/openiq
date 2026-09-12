@@ -155,6 +155,7 @@ Twitch uses `TWITCH_CLIENT_ID` and `TWITCH_ACCESS_TOKEN`; without them the demo 
 .venv/bin/python manage.py check
 .venv/bin/python manage.py runbot --check
 .venv/bin/python scripts/verify_ocr.py
+.venv/bin/python manage.py verify_imports --output import-report.json
 .venv/bin/python scripts/verify_packets.py
 node --check static/app.js
 ```
