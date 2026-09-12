@@ -46,7 +46,7 @@ live installation checks remain outstanding.
 - [ ] **BOT-03 — Native slash-command options.** Replace the generic JSON argument
   box with typed Discord inputs, choices, autocomplete where useful, and command
   descriptions generated from the command catalog.
-- [ ] **BOT-04 — Discord-safe responses.** Present domain results as readable
+- [x] **BOT-04 — Discord-safe responses.** Present domain results as readable
   messages or files, paginate output beyond Discord limits, and map validation
   and permission failures to stable user-facing responses.
 - [ ] **BOT-05 — Persistent interactive components.** Restore signup and welcome

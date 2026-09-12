@@ -9,6 +9,8 @@ from guilds.models import Guild,Access
 from guilds.modules.commands import COMMANDS
 from guilds.discord_auth import role_for
 from guilds.services import execute
+from guilds.modules.core import Invalid
+from guilds.discord_responses import respond,error_message
 
 class Command(BaseCommand):
     help='Connect the optional Discord bot. Requires credentials and explicit delivery enablement.'
@@ -47,19 +49,19 @@ class Command(BaseCommand):
                 def run():
                     candidates=Guild.objects.filter(server_id=str(interaction.guild_id))
                     if guild_name:candidates=candidates.filter(name__iexact=guild_name)
-                    if candidates.count()!=1:raise ValueError('Specify guild_name to select a configured BDO guild.')
+                    if candidates.count()!=1:raise Invalid('Specify guild_name to select a configured BDO guild.')
                     g=candidates.get();user,created=User.objects.get_or_create(username='discord_'+str(interaction.user.id))
                     if created:user.set_unusable_password();user.save()
                     tier=role_for(g,{'owner':interaction.guild.owner_id==interaction.user.id,'permissions':str(interaction.user.guild_permissions.value)},[r.id for r in interaction.user.roles])
                     if not tier:
-                        Access.objects.filter(guild=g,user=user).delete();raise ValueError('Your Discord roles do not grant access.')
+                        Access.objects.filter(guild=g,user=user).delete();raise Invalid('Your Discord roles do not grant access.')
                     Access.objects.update_or_create(guild=g,user=user,defaults={'role':tier})
                     channel=g.config.get('channels',{}).get('gear' if command in ['gear','gearupdate','gearlist','gearping','deletegear'] else 'bot')
-                    if channel and str(channel)!=str(interaction.channel_id):raise ValueError('Use the configured command channel.')
+                    if channel and str(channel)!=str(interaction.channel_id):raise Invalid('Use the configured command channel.')
                     return execute(user,g.pk,'commands','run',{'command':command,'arguments':json.loads(arguments)})
-                try:result=await run();content=json.dumps(result,indent=2,ensure_ascii=False)
-                except Exception as exc:content=str(exc)
-                await interaction.followup.send(content[:1900],ephemeral=True,allowed_mentions=discord.AllowedMentions.none())
+                try:result=await run()
+                except Exception as exc:result=error_message(exc)
+                await respond(interaction,result)
             return callback
         @bot.event
         async def on_interaction(interaction):
@@ -71,14 +73,14 @@ class Command(BaseCommand):
                 from guilds.discord_components import process
                 user=User.objects.get(username='discord_'+str(interaction.user.id))
                 gid=custom_id.split(':')[1];g=Guild.objects.get(pk=gid)
-                if g.server_id!=str(interaction.guild_id):raise ValueError('Wrong server')
+                if g.server_id!=str(interaction.guild_id):raise Invalid('Wrong server')
                 tier=role_for(g,{'owner':interaction.guild.owner_id==interaction.user.id,'permissions':str(interaction.user.guild_permissions.value)},[r.id for r in interaction.user.roles])
-                if not tier:Access.objects.filter(guild=g,user=user).delete();raise ValueError('No guild access')
+                if not tier:Access.objects.filter(guild=g,user=user).delete();raise Invalid('No guild access')
                 Access.objects.update_or_create(guild=g,user=user,defaults={'role':tier})
                 process(user,custom_id,deliver_roles=True)
             try:await apply_component();text='Welcome role updated.' if custom_id.startswith('welcome:') else 'Signup updated.'
-            except Exception as exc:text=str(exc)
-            await interaction.followup.send(text[:1900],ephemeral=True,allowed_mentions=discord.AllowedMentions.none())
+            except Exception as exc:text=error_message(exc)
+            await respond(interaction,text)
         for name in COMMANDS:
             pieces=name.split(' ',1)
             if len(pieces)==2:
