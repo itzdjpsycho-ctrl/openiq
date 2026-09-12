@@ -2,7 +2,7 @@ import signal,threading
 from django.core.management.base import BaseCommand
 from django.core.management import call_command
 class Command(BaseCommand):
-    help='Run local scheduled jobs continuously; notifications remain previews.'
+    help='Run scheduled jobs continuously; outbound delivery requires ENABLE_DISCORD_DELIVERY=1.'
     def add_arguments(self,p):p.add_argument('--interval',type=int,default=30)
     def handle(self,*args,**o):
         stop=threading.Event()

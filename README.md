@@ -113,7 +113,7 @@ No Discord messages have been sent. No bot has been connected.
 .venv/bin/python manage.py local_command guildstats --guild 1 --user demo
 .venv/bin/python manage.py local_command 'reminder list' --guild 1 --user member
 
-# Process scheduled jobs once; output remains in the preview queue.
+# Process scheduled jobs once; sends only with ENABLE_DISCORD_DELIVERY=1.
 .venv/bin/python manage.py tick
 
 # Tail a normalized event log into an existing live session.

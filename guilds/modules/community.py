@@ -14,6 +14,7 @@ def handle(g,action,p,role,user):
     if action=='cancel_reminder':
         r=get(g,'reminder',p['reminder'])
         if r.data['user']!=user.pk: raise PermissionDenied()
+        Outbox.objects.filter(guild=g,key=f'{g.pk}:reminder:{r.key}',status='preview').update(status='cancelled')
         r.data['status']='cancelled'; r.save(); return public(r)
     if action=='ticket': return public(save(g,'ticket',{'user':user.pk,'category':text(p.get('category','General')),'subject':text(p['subject']),'text':text(p['text'],maximum=5000),'status':'open','replies':[]}))
     if action=='reply':
@@ -77,7 +78,7 @@ def handle(g,action,p,role,user):
         delivered=0
         for r in rows(g,'reminder'):
             if r.data['status']=='pending' and r.data['at']<=now():
-                preview(g,'reminder:'+r.key,r.data['text']); r.data['status']='previewed'; r.save(); delivered+=1
+                preview(g,'reminder:'+r.key,r.data['text'],g.config.get('channels',{}).get('reminders') or g.config.get('channels',{}).get('bot','preview')); r.data['status']='previewed'; r.save(); delivered+=1
         for milestone in g.config.get('milestones',[100,1000]):
             for s in calculate(g)['members']:
                 if s['kills']>=milestone: preview(g,f"milestone:{s['id']}:{milestone}",f"{s['name']} reached {milestone} kills!")

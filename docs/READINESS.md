@@ -70,6 +70,12 @@ live installation checks remain outstanding.
 - [ ] **BOT-09 — Scheduler delivery.** Deliver due reminders exactly once with
   retry/backoff and restart-safe idempotency instead of leaving scheduled work as
   previews.
+  - [x] Durable claims, exponential retries, rate-limit handling, cancellation,
+    and recovery of remotely created messages are implemented and tested.
+  - [ ] An unconditional exactly-once guarantee cannot be established across
+    Discord and the local database: ambiguous missing-message outcomes require
+    operator reconciliation. Validate this behavior in the staging guild before
+    accepting the delivery guarantee.
 - [ ] **BOT-10 — Bot diagnostics.** Add an operator command/check that verifies
   token validity, guild installation, intents, channel access, role hierarchy,
   and command registration without sending messages.
