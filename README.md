@@ -167,6 +167,16 @@ Browser checks use optional `playwright` (`pip install -r requirements-dev.txt`,
 
 ## Configuration and data
 
+Operator maintenance uses `python manage.py maintain OPERATION --guild ID --actor OWNER`.
+Operations are `export` (`--output private.json`), `remove_user` (`--username USER`),
+`relink_discord` (`--username USER --member MEMBER_ID --discord-id ID`),
+`delete_guild` (`--confirmation GUILD_NAME`), and `cleanup` (`--days 90`). Mutations
+preview by default and require `--apply`. Removing guild access preserves other
+guild memberships; the local account is removed only when no memberships remain
+and it is not a backend administrator. Cleanup removes expired capture/adoption
+credentials and old audit/completed outbox records, preserving finalized wars
+and their correction history. Exports are private and exclude credentials.
+
 `/healthz/` checks web-process liveness. `/readyz/` and `python manage.py diagnostics`
 check database access, migrations, writable storage and optional process heartbeats.
 Set `REQUIRED_PROCESSES=scheduler,bot` when those services are enabled; a heartbeat

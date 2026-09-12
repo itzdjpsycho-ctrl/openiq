@@ -167,9 +167,12 @@ live installation checks remain outstanding.
   steps and add a preflight command that checks the current data before upgrade.
   `preflight` checks migrations, owners and war relationships without changing
   records. UPGRADES.md covers backup, all writer services and rollback data rules.
-- [ ] **OPS-08 — Structured maintenance tools.** Add supported commands for user
+- [x] **OPS-08 — Structured maintenance tools.** Add supported commands for user
   removal, Discord relinking, guild export, guild deletion, expired-token cleanup,
   and audit/outbox retention.
+  Owner-scoped `maintain` operations preview mutations, require explicit apply,
+  protect the last owner and other guild memberships, and exclude credentials
+  from exports. Cleanup preserves finalized war correction history.
 
 ## 5. Security and privacy
 
