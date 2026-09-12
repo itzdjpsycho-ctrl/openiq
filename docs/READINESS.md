@@ -198,9 +198,12 @@ live installation checks remain outstanding.
   OCR inputs.
   Verified PNG/JPEG/WebP decoding, 20-megapixel image limits, streamed 12-MiB
   aggregate limits, engine/request budgets and real temporary-file cleanup pass.
-- [ ] **SEC-05 — Permission regression matrix.** Verify owner/admin/member and
+- [x] **SEC-05 — Permission regression matrix.** Verify owner/admin/member and
   unauthenticated behavior for every HTTP action, Discord command, component, and
   private/public record type.
+  Catalog and internal HTTP actions plus every command have anonymous/lower-role
+  denial coverage. Existing owner/member lifecycle and signed component regressions
+  cover admitted behavior; private record and unrelated guild directory leaks are closed.
 - [ ] **SEC-06 — Privacy controls.** Document stored Discord/game data and provide
   guild-member export, unlink, anonymization, and deletion workflows.
 

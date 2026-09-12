@@ -21,6 +21,10 @@ def execute(user,guild_id,module,action,payload):
     before_wars={r.key:r.data for r in Record.objects.filter(guild=g,kind='war')} if module in ('wars','live','coaching','commands','roster','admin') else None
     if module not in MODULES: raise Invalid('Unknown module')
     if not isinstance(payload,dict): raise Invalid('Payload must be an object')
+    from .catalog import ACTIONS
+    from .modules.core import require
+    declared=next((item for item in ACTIONS if item['module']==module and item['action']==action),None)
+    if declared:require(role,declared['role'])
     result=MODULES[module].handle(g,action,payload,role,user)
     if before_wars is not None and g.pk:
         from .modules.core import save,now
