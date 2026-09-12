@@ -52,8 +52,15 @@ def ocr_view(request,guild_id):
     if role=='member' and request.POST.get('mode')!='gear': raise PermissionDenied()
     try:
         files=request.FILES.getlist('images')
+        if getattr(request,'upload_too_large',False) or sum(f.size for f in files)>12*1024*1024:
+            return JsonResponse({'error':'Combined images exceed 12 MiB'},status=413)
         if not files or len(files)>10: raise Invalid('Choose 1–10 images')
-        texts=[integrations.ocr(f.read()) for f in files]
+        import time
+        deadline=time.monotonic()+45;texts=[]
+        for file in files:
+            remaining=deadline-time.monotonic()
+            if remaining<=0:raise Invalid('OCR request exceeded its processing budget')
+            texts.append(integrations.ocr(file.read(),timeout=remaining))
         result={'texts':texts,'review_required':True}
         if request.POST.get('mode')=='gear':result['gear']=integrations.gear_numbers(texts)
         else:

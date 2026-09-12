@@ -148,4 +148,6 @@ class AdapterTests(TestCase):
     def test_ocr_headers_and_image_pixel_limit(self):
         from .modules.integrations import paired_scores
         self.assertEqual(paired_scores(['Names\nAlpha','Kills Deaths\n\n10 2'])[0]['kills'],10)
-        with patch('PIL.Image.open',return_value=Mock(width=5000,height=5000)),self.assertRaises(Invalid):ocr(b'image')
+        from unittest.mock import MagicMock
+        image=MagicMock(width=5000,height=5000,format='PNG');image.__enter__.return_value=image
+        with patch('PIL.Image.open',return_value=image),self.assertRaises(Invalid):ocr(b'image')

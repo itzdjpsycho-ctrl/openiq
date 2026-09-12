@@ -44,3 +44,10 @@ with `pair_capture --revoke`; they are independently scoped and hashed. Rotate
 Discord/Twitch credentials in their provider consoles and update `.env` without
 putting values in shell history, Git or chat. Restrict old backups because they
 retain earlier signing keys and data.
+
+OCR accepts decoded PNG/JPEG/WebP images up to 10 MiB and 20 megapixels each,
+with at most ten files and 12 MiB total streamed file content per request. The
+engine gets at most 30 seconds per image within a 45-second request budget.
+Temporary upload and Tesseract files are cleaned by their managed lifecycles;
+uploaded images are not retained. Extracted score rows remain reviewable and
+follow the configured import retention policy.

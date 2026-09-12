@@ -193,9 +193,11 @@ live installation checks remain outstanding.
   Logins set an absolute expiry and clear prior Discord state; logout flushes
   the server session. Logs redact credentials/callback codes, and Gunicorn logs
   omit query strings. Rotation and logout regressions pass.
-- [ ] **SEC-04 — Upload hardening.** Enforce content signatures, decoded dimensions,
+- [x] **SEC-04 — Upload hardening.** Enforce content signatures, decoded dimensions,
   processing timeouts, temporary-file cleanup, and aggregate request limits for
   OCR inputs.
+  Verified PNG/JPEG/WebP decoding, 20-megapixel image limits, streamed 12-MiB
+  aggregate limits, engine/request budgets and real temporary-file cleanup pass.
 - [ ] **SEC-05 — Permission regression matrix.** Verify owner/admin/member and
   unauthenticated behavior for every HTTP action, Discord command, component, and
   private/public record type.

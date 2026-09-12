@@ -57,6 +57,9 @@ if os.getenv('TRUST_PROXY','0') == '1':
 if not DEBUG:
     STORAGES = {'default':{'BACKEND':'django.core.files.storage.FileSystemStorage'},'staticfiles':{'BACKEND':'whitenoise.storage.CompressedManifestStaticFilesStorage'}}
 DATA_UPLOAD_MAX_MEMORY_SIZE = 12*1024*1024
+DATA_UPLOAD_MAX_NUMBER_FILES = 10
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2*1024*1024
+FILE_UPLOAD_HANDLERS = ['guilds.uploads.BoundedUploads','django.core.files.uploadhandler.MemoryFileUploadHandler','django.core.files.uploadhandler.TemporaryFileUploadHandler']
 LOGGING = {'version':1,'disable_existing_loggers':False,
            'filters':{'credentials':{'()':'guilds.session_security.RedactCredentials'}},
            'handlers':{'console':{'class':'logging.StreamHandler','filters':['credentials']}},

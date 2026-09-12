@@ -18,16 +18,20 @@ def roster_html(html):
     parser=RosterParser(); parser.feed(html)
     return list(dict.fromkeys(parser.names))
 
-def ocr(image_bytes):
+def ocr(image_bytes,timeout=30):
     from PIL import Image, ImageOps
     import pytesseract
     if len(image_bytes)>10*1024*1024: raise Invalid('Image exceeds 10 MB')
     try:
-        im=Image.open(io.BytesIO(image_bytes))
-        if im.width*im.height>20000000: raise Invalid('Image exceeds 20 megapixels')
-        im=ImageOps.autocontrast(ImageOps.grayscale(im))
-        return pytesseract.image_to_string(im,config='--psm 6',timeout=30)
-    except (OSError,RuntimeError) as exc: raise Invalid(f'OCR unavailable or image invalid: {exc}')
+        with Image.open(io.BytesIO(image_bytes)) as im:
+            if im.format not in ('PNG','JPEG','WEBP'):raise Invalid('Use a PNG, JPEG or WebP image')
+            if im.width*im.height>20000000: raise Invalid('Image exceeds 20 megapixels')
+            im.verify()
+        with Image.open(io.BytesIO(image_bytes)) as im:
+            im.load()
+            with ImageOps.grayscale(im) as gray, ImageOps.autocontrast(gray) as prepared:
+                return pytesseract.image_to_string(prepared,config='--psm 6',timeout=max(.1,min(30,timeout)))
+    except (OSError,RuntimeError,SyntaxError,Image.DecompressionBombError): raise Invalid('OCR unavailable, timed out, or image invalid. Check the image and local OCR installation.') from None
 
 def handle(g,action,p,role,user):
     if action=='twitch_link':
