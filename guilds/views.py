@@ -142,8 +142,10 @@ def recover(request):
 
 
 def health(request):
-    from django.db import DatabaseError
-    try:
-        Guild.objects.exists()
-        return JsonResponse({'status':'ok','application':'OpenIQ'})
-    except DatabaseError:return JsonResponse({'status':'unavailable'},status=503)
+    return JsonResponse({'status':'ok','application':'OpenIQ'})
+
+
+def ready(request):
+    from .health import readiness
+    report=readiness()
+    return JsonResponse(report,status=200 if report['status']=='ok' else 503)

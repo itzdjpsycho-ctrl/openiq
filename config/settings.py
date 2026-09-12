@@ -5,6 +5,8 @@ from config.database import database_configuration
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = os.getenv('DEBUG', '1') == '1'
 ALLOW_LOCAL_LOGIN = os.getenv('ALLOW_LOCAL_LOGIN', '0') == '1'
+OPENIQ_VERSION = os.getenv('OPENIQ_VERSION','development')
+REQUIRED_PROCESSES = [x for x in os.getenv('REQUIRED_PROCESSES','').split(',') if x in ('bot','scheduler')]
 DATA_DIR = Path(os.getenv('OPENIQ_DATA_DIR',str(BASE_DIR)))
 DATA_DIR.mkdir(parents=True,exist_ok=True)
 key_file = DATA_DIR / '.secret-key'

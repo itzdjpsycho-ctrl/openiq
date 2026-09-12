@@ -2,6 +2,8 @@ name: openiq
 x-runtime: &runtime
   SECRET_KEY: "${SECRET_KEY:-}"
   OPENIQ_DATA_DIR: /data
+  OPENIQ_VERSION: "${OPENIQ_VERSION:-development}"
+  REQUIRED_PROCESSES: "${REQUIRED_PROCESSES:-}"
   DEBUG: "${DEBUG:-0}"
   ALLOWED_HOSTS: "${ALLOWED_HOSTS:-localhost,127.0.0.1}"
   HTTPS: "${HTTPS:-1}"

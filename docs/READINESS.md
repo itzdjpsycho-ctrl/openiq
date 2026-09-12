@@ -152,9 +152,11 @@ live installation checks remain outstanding.
   The `backups` profile runs immediate and periodic snapshots with configurable
   retention and retry delay. See [backup operations](BACKUPS.md) for the isolated
   restore drill. Scheduler tests pass; live Docker rehearsal remains LIVE-03.
-- [ ] **OPS-05 — Readiness and diagnostics.** Separate liveness from readiness and
+- [x] **OPS-05 — Readiness and diagnostics.** Separate liveness from readiness and
   report database access, migrations, writable storage, bot/scheduler heartbeat,
   and version without revealing secrets.
+  `/healthz/` is liveness; `/readyz/` and `diagnostics` verify database, migration,
+  storage and configured process heartbeats. Failure/expiry and bot checks pass.
 - [ ] **OPS-06 — Graceful process behavior.** Confirm signal handling, shutdown,
   startup ordering, SQLite contention handling, and recovery after abrupt process
   termination for web, scheduler, and bot.

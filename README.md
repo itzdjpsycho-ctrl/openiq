@@ -167,6 +167,12 @@ Browser checks use optional `playwright` (`pip install -r requirements-dev.txt`,
 
 ## Configuration and data
 
+`/healthz/` checks web-process liveness. `/readyz/` and `python manage.py diagnostics`
+check database access, migrations, writable storage and optional process heartbeats.
+Set `REQUIRED_PROCESSES=scheduler,bot` when those services are enabled; a heartbeat
+older than two minutes fails readiness. Set `OPENIQ_VERSION` to the deployed commit
+or release. Reports contain status flags rather than credentials or data paths.
+
 Owners can set `retention` through the settings API with `capture_days`,
 `import_days`, `recap_days`, and `summary_days` (0 disables expiry). Preview with
 `python manage.py retention --guild ID`; add `--apply` to clear expired server
