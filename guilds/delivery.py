@@ -14,7 +14,9 @@ def deliver(item,enabled=False):
     method='PATCH' if previous else 'POST'
     payload={'content':item.text[:2000],'allowed_mentions':{'parse':[]}}
     components=Record.objects.filter(guild=item.guild,kind='message_components',key=str(item.pk)).first()
-    if components:payload['components']=components.data['components']
+    if components:
+        payload['components']=components.data['components']
+        payload['embeds']=components.data.get('embeds',[])
     response=httpx.request(method,url,headers={'Authorization':'Bot '+os.environ['DISCORD_BOT_TOKEN']},json=payload,timeout=15)
     response.raise_for_status();message=response.json()
     save(item.guild,'delivery',{'message_id':message['id'],'channel':item.channel},str(item.pk));item.status='sent';item.save()

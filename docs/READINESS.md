@@ -52,7 +52,7 @@ live installation checks remain outstanding.
 - [x] **BOT-05 — Persistent interactive components.** Restore signup and welcome
   views after bot restart and reject stale, malformed, cross-guild, or replayed
   component identifiers.
-- [ ] **BOT-06 — Event message lifecycle.** Create and update signup cards,
+- [x] **BOT-06 — Event message lifecycle.** Create and update signup cards,
   capacities, waitlists, locks, archive state, recurrence, and missing-response
   reminders through Discord.
 - [ ] **BOT-07 — Ticket lifecycle.** Create private channels, synchronize replies,

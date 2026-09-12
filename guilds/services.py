@@ -20,5 +20,10 @@ def execute(user,guild_id,module,action,payload):
     if module not in MODULES: raise Invalid('Unknown module')
     if not isinstance(payload,dict): raise Invalid('Payload must be an object')
     result=MODULES[module].handle(g,action,payload,role,user)
+    if module in ['events','commands'] and isinstance(result,dict) and result.get('id'):
+        from guilds.models import Outbox,Record
+        event=Record.objects.filter(guild=g,kind='event',key=str(result['id'])).first()
+        if event and Outbox.objects.filter(guild=g,key=f'{g.pk}:event:{event.key}').exists():
+            MODULES['community'].handle(g,'post_event',{'event':event.key},'admin',user)
     if g.pk: Audit.objects.create(guild=g,actor=user.username,action=module+'.'+action,data={'result_id':result.get('id')} if isinstance(result,dict) else {})
     return result

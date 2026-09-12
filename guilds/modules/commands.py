@@ -6,6 +6,8 @@ from .community import preview
 from guilds.models import Guild, Access
 
 ALIASES={
+ 'event create':('events','save'),'event edit':('events','save'),'event signup':('events','signup'),
+ 'event post':('community','post_event'),'event next':('events','next'),
  'sync roster':('roster','sync'),'warscores':('wars','review'),'warscores-beta':('wars','review'),
  'vacation':('roster','vacation'),'link':('roster','link'),'class':('roster','class'),'setclass':('roster','class'),
  'gearupdate':('gear','save'),'deletegear':('gear','delete'),'link-twitch':('integrations','twitch_link'),
@@ -27,6 +29,10 @@ def dispatch(g,command,p,role,user):
     if minimum: require(role,minimum)
     if command in ALIASES:
         module,action=ALIASES[command]
+        if command=='event signup':
+            m=own_member(g,user)
+            if not m:raise Invalid('Link your member first')
+            p={**p,'member':m.key}
         if command=='setclass':
             m=own_member(g,user)
             if not m: raise Invalid('Link your member first')

@@ -38,7 +38,8 @@ class ManagementTests(TestCase):
             self.assertTrue((root/'installed/scripts/capture_desktop.py').exists())
     def test_bot_command_registry_never_connects_in_check_mode(self):
         with patch('discord.Client.run') as connect:
-            self.assertIn('53 commands',self.call('runbot',check=True));connect.assert_not_called()
+            from .modules.commands import COMMANDS
+            self.assertIn(f'{len(COMMANDS)} commands',self.call('runbot',check=True));connect.assert_not_called()
         with patch.dict('os.environ',{'DISCORD_BOT_TOKEN':'','ENABLE_DISCORD_DELIVERY':'0'}),self.assertRaises(CommandError):self.call('runbot')
     def test_backend_admin_rotates_and_disables(self):
         with patch.dict('os.environ',{'BACKEND_ADMIN_USERNAME':''}),self.assertRaises(CommandError):self.call('bootstrap_admin')

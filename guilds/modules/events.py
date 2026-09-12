@@ -24,6 +24,7 @@ def handle(g,action,p,role,user):
         old=get(g,'event',p['id']).data if p.get('id') else {'signups':[]}
         teams=p.get('teams',old.get('teams',[]))
         if not isinstance(teams,list) or not teams: raise Invalid('Add at least one team')
+        if len(teams)>24:raise Invalid('Use at most 24 teams per Discord signup card')
         for t in teams:
             t['name']=text(t['name'],'team name',80); t['capacity']=integer(t['capacity'],'capacity',1,1000)
             t['group']=text(t['group'],'team group',80) if t.get('group') else ''

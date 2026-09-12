@@ -23,6 +23,9 @@ class NativeCommandTests(TestCase):
         self.assertEqual(normalize('setbotchannel',{'channel':Mock(id=123)})['channel'],'123')
         self.assertEqual(normalize('whois',{'discord_id':Mock(id=456)})['discord_id'],'456')
         self.assertEqual(normalize('sync roster',{}),{})
+        self.assertEqual(normalize('event create',{'teams':'Front,20\nBack,10,Support'})['teams'][1],{'name':'Back','capacity':10,'group':'Support'})
+        for teams in ['bad','Front,abc']:
+            with self.assertRaises(Invalid):normalize('event create',{'teams':teams})
         self.assertEqual(normalize('config',{'setting':'roles','value':'{"member":["1"]}'}),{'config':{'roles':{'member':['1']}}})
         with self.assertRaises(Invalid):normalize('config',{'setting':'roles','value':'[]'})
         with self.assertRaises(Invalid):normalize('config',{})

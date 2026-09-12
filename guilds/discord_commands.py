@@ -6,13 +6,15 @@ import keyword
 import discord
 from discord import app_commands
 from asgiref.sync import sync_to_async
-from .catalog import ACTIONS, f, MEM, WAR
+from .catalog import ACTIONS, f, MEM, WAR, EVENT
 from .modules.commands import ALIASES, COMMANDS
 from .modules.core import Invalid
 from .models import Guild, Record
 from .discord_auth import role_for
 
 EXTRA_FIELDS = {
+    'event edit':[f('id','Event','event'),f('title','Title'),f('locked','Lock signups','checkbox'),f('archived','Archive event','checkbox')],
+    'event signup':[EVENT,f('team','Team name; leave blank to withdraw',default='')],
     'trends':[MEM], 'warlog':[WAR], 'gear':[MEM], 'whois':[f('discord_id','Discord account')],
     'exception':[MEM], 'removeexception':[MEM], 'unlink':[MEM], 'unlink-twitch':[MEM], 'reset-class':[MEM],
     'setbotchannel':[f('channel','Command channel')], 'setsyncnotifications':[f('channel','Sync notification channel')],
@@ -49,6 +51,15 @@ def normalize(command, supplied):
     for field in fields:
         value=supplied.get(option_name(field['name']),field.get('default'))
         if value is None:continue
+        if field['type']=='teams':
+            teams=[]
+            for line in value.splitlines():
+                parts=line.split(',')
+                if len(parts) not in [2,3]:raise Invalid('Teams use name,capacity,optional group on each line')
+                try:capacity=int(parts[1])
+                except ValueError:raise Invalid('Team capacity must be a whole number')
+                teams.append({'name':parts[0].strip(),'capacity':capacity,'group':parts[2].strip() if len(parts)==3 else ''})
+            value=teams
         if field['type']=='lines':value=[part.strip() for part in value.replace(',', '\n').splitlines() if part.strip()]
         if field['name'] in ['channel','discord_id']:value=str(value.id)
         result[field['name']]=value
@@ -95,7 +106,7 @@ def build_command(name, run):
     descriptions={};choices={};completions={}
     for field in fields:
         option=option_name(field['name']);default=field.get('default')
-        optional=default is not None or field['type']=='checkbox' or field['name'] in ['message','backfill'] or (name in ['gear','whois','reset-class','sync roster'])
+        optional=default is not None or field['type']=='checkbox' or field['name'] in ['message','backfill','image','accent'] or (name in ['gear','whois','reset-class','sync roster']) or (name=='event edit' and field['name']!='id')
         parameters.append(inspect.Parameter(option,inspect.Parameter.KEYWORD_ONLY,annotation=annotation(field),default=default if optional else inspect.Parameter.empty))
         descriptions[option]=field['label'][:100]
         if field.get('options'):choices[option]=[app_commands.Choice(name=value,value=value) for value in field['options']]

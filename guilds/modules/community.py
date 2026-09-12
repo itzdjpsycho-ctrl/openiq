@@ -5,8 +5,8 @@ from .analytics import calculate
 
 def preview(g,key,content,channel='preview'):
     obj,_=Outbox.objects.get_or_create(key=f'{g.pk}:{key}',defaults={'guild':g,'text':content,'channel':channel})
-    if obj.text!=content:
-        obj.text=content;obj.status='preview';obj.save()
+    if obj.text!=content or obj.channel!=channel:
+        obj.text=content;obj.channel=channel;obj.status='preview';obj.save()
     return {'id':obj.pk,'text':obj.text,'status':obj.status}
 
 def handle(g,action,p,role,user):
@@ -61,11 +61,17 @@ def handle(g,action,p,role,user):
     if action in ['post_event','ping_missing']:
         e=get(g,'event',p['event']); names={m.key:m.data['name'] for m in rows(g,'member')}; signed={s['member'] for s in e.data['signups']}
         if action=='ping_missing': content='Awaiting response: '+', '.join(m.data['name'] for m in rows(g,'member') if m.data.get('active') and m.key not in signed)
-        else: content=e.data['title']+' — '+e.data['at']+'\n'+'\n'.join(t['name']+': '+', '.join(names.get(s['member'],'Unknown')+(' (waitlist)' if s.get('waitlisted') else '') for s in e.data['signups'] if s['team']==t['name']) for t in e.data['teams'])
+        else: content=e.data['title']+' — '+e.data['at']+'\n'+('Archived' if e.data.get('archived') else 'Locked' if e.data.get('locked') else 'Signups open')+'\n'+'\n'.join(t['name']+f" (capacity {t['capacity']}): "+', '.join(names.get(s['member'],'Unknown')+(' (waitlist)' if s.get('waitlisted') else '') for s in e.data['signups'] if s['team']==t['name']) for t in e.data['teams'])
         result=preview(g,'event:'+e.key if action=='post_event' else ident(),content,g.config.get('channels',{}).get('events','preview'))
         if action=='post_event':
             from guilds.discord_components import event_components
-            save(g,'message_components',{'components':event_components(g,e)},str(result['id']))
+            embed={'title':e.data['title'][:256]}
+            if e.data.get('image'):embed['image']={'url':e.data['image']}
+            if e.data.get('accent'):embed['color']=int(e.data['accent'][1:],16)
+            payload={'components':event_components(g,e),'embeds':[embed]}
+            old=Record.objects.filter(guild=g,kind='message_components',key=str(result['id'])).first()
+            if old and old.data!=payload:Outbox.objects.filter(pk=result['id']).update(status='preview')
+            save(g,'message_components',payload,str(result['id']))
         return result
     if action=='run_due':
         delivered=0
