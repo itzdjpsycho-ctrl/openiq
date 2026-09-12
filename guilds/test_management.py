@@ -78,8 +78,8 @@ class ManagementTests(TestCase):
         interaction.guild_id=999;async_to_sync(bot.on_interaction)(interaction)
         self.assertEqual(interaction.followup.send.call_args.args[0],'Wrong server')
         interaction.guild_id=123
-        async_to_sync(command.callback)(interaction,arguments='invalid JSON')
-        self.assertIn('Invalid command input',interaction.followup.send.call_args.args[0])
+        async_to_sync(bot.tree.get_command('config').callback)(interaction,setting='roles',value='invalid JSON')
+        self.assertIn('valid JSON',interaction.followup.send.call_args.args[0])
         async_to_sync(command.callback)(interaction,guild_name='missing')
         self.assertIn('Specify guild',interaction.followup.send.call_args.args[0])
         self.g.config={'channels':{'bot':'999'}};self.g.save()

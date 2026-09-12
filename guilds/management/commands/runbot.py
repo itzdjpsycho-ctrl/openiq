@@ -11,6 +11,7 @@ from guilds.discord_auth import role_for
 from guilds.services import execute
 from guilds.modules.core import Invalid
 from guilds.discord_responses import respond,error_message
+from guilds.discord_commands import build_command,normalize
 
 class Command(BaseCommand):
     help='Connect the optional Discord bot. Requires credentials and explicit delivery enablement.'
@@ -41,8 +42,7 @@ class Command(BaseCommand):
                     raise CommandError(f'Discord command sync failed ({scope}, HTTP {exc.status}). Check application installation and permissions.') from exc
                 output.write(f'Synced {len(registered)} top-level commands ({scope}).')
         bot=Bot();groups={}
-        def make_callback(command):
-            async def callback(interaction:discord.Interaction,arguments:str='{}',guild_name:str=''):
+        async def run_command(interaction,command,values,guild_name):
                 if interaction.guild is None:await interaction.response.send_message('Use this command in a server.',ephemeral=True);return
                 await interaction.response.defer(ephemeral=True)
                 @sync_to_async
@@ -58,11 +58,14 @@ class Command(BaseCommand):
                     Access.objects.update_or_create(guild=g,user=user,defaults={'role':tier})
                     channel=g.config.get('channels',{}).get('gear' if command in ['gear','gearupdate','gearlist','gearping','deletegear'] else 'bot')
                     if channel and str(channel)!=str(interaction.channel_id):raise Invalid('Use the configured command channel.')
-                    return execute(user,g.pk,'commands','run',{'command':command,'arguments':json.loads(arguments)})
+                    arguments=normalize(command,values)
+                    if command=='link':
+                        linked,_=User.objects.get_or_create(username='discord_'+arguments['discord_id'],defaults={'password':'!'})
+                        arguments['user_id']=linked.pk
+                    return execute(user,g.pk,'commands','run',{'command':command,'arguments':arguments})
                 try:result=await run()
                 except Exception as exc:result=error_message(exc)
                 await respond(interaction,result)
-            return callback
         @bot.event
         async def on_interaction(interaction):
             custom_id=(interaction.data or {}).get('custom_id','')
@@ -86,8 +89,8 @@ class Command(BaseCommand):
             if len(pieces)==2:
                 if pieces[0] not in groups:
                     groups[pieces[0]]=app_commands.Group(name=pieces[0],description='OpenIQ '+pieces[0]);bot.tree.add_command(groups[pieces[0]])
-                groups[pieces[0]].add_command(app_commands.Command(name=pieces[1],description='Run '+name,callback=make_callback(name)))
-            else:bot.tree.add_command(app_commands.Command(name=name,description='Run '+name,callback=make_callback(name)))
+                groups[pieces[0]].add_command(build_command(name,run_command))
+            else:bot.tree.add_command(build_command(name,run_command))
         if options['check']:
             self.stdout.write(f'{len(COMMANDS)} commands built locally; no Discord connection.');return
         token=os.getenv('DISCORD_BOT_TOKEN')

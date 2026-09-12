@@ -136,6 +136,13 @@ previews an outbox item; `deliver ID --send` requires delivery enablement and a
 numeric target channel. Remote behavior is covered with controlled mocks but
 still needs the staging-guild launch check before a real guild depends on it.
 
+Slash commands use native typed fields instead of a generic arguments object.
+Member, war, reminder and assignment selections offer guild-scoped autocomplete;
+Discord account/channel fields use native pickers. Dates use ISO text with an
+explicit timezone offset for timestamps. Reviewed roster names accept commas or
+newlines. `/config` accepts a named configuration section and that section's JSON
+object. Large responses are private JSON attachments rather than truncated text.
+
 Twitch uses `TWITCH_CLIENT_ID` and `TWITCH_ACCESS_TOKEN`; without them the demo directory is explicitly labeled as fixture data.
 
 ## Verification

@@ -43,7 +43,7 @@ live installation checks remain outstanding.
   wiring, and an explicit switch controlling outbound delivery.
 - [x] **BOT-02 — Development-guild command sync.** Support fast guild-scoped sync
   as well as global sync, document both modes, and report sync failures clearly.
-- [ ] **BOT-03 — Native slash-command options.** Replace the generic JSON argument
+- [x] **BOT-03 — Native slash-command options.** Replace the generic JSON argument
   box with typed Discord inputs, choices, autocomplete where useful, and command
   descriptions generated from the command catalog.
 - [x] **BOT-04 — Discord-safe responses.** Present domain results as readable
